@@ -96,7 +96,7 @@ class DeepQNetwork:
         })
 
         # save network every 100000 iteration
-        if self.time_step % 100 == 0:
+        if self.time_step % 100000 == 0:
             self.saver.save(self.session, 'saved_networks/network-dqn', global_step=self.time_step)
 
     def _create_network(self):
