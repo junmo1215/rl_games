@@ -36,7 +36,7 @@ class DeepQNetwork:
 
     def store_transition(self, observation, action, reward, done, observation_):
         "储存要训练的内容"
-        next_state = np.append(observation_, self.current_state[:, :, 1:], axis=2)
+        next_state = np.append(observation_, self.current_state[:, :, :3], axis=2)
 
         self.memory_list.append([self.current_state, action, reward, done, next_state])
         if len(self.memory_list) > self.memory_size:
@@ -96,7 +96,7 @@ class DeepQNetwork:
         })
 
         # save network every 100000 iteration
-        if self.time_step % 10000 == 0:
+        if self.time_step % 100 == 0:
             self.saver.save(self.session, 'saved_networks/network-dqn', global_step=self.time_step)
 
     def _create_network(self):
@@ -152,9 +152,13 @@ class DeepQNetwork:
         checkpoint = tf.train.get_checkpoint_state("saved_networks")
         if checkpoint and checkpoint.model_checkpoint_path:
             self.saver.restore(self.session, checkpoint.model_checkpoint_path)
+            self.time_step = self._get_last_time_step(checkpoint.model_checkpoint_path)
             print("Successfully loaded:", checkpoint.model_checkpoint_path)
         else:
             print("Could not find old network weights")
+
+    def _get_last_time_step(self, str_model_checkpoint_path):
+        return int(str_model_checkpoint_path.split('-')[-1])
 
     def _weight_variable(self, shape):
         initial = tf.truncated_normal(shape, stddev=0.01)

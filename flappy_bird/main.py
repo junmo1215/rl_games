@@ -54,9 +54,6 @@ def main():
             if done:
                 break
 
-            # if step % 100 == 0:
-            #     print("episode:{} step:{}".format(episode, step))
-
             observation = observation_
             step += 1
 
