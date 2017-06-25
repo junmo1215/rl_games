@@ -1,8 +1,9 @@
+from __future__ import print_function
 import numpy as np
 import sys
 import random
 import pygame
-import flappy_bird_utils
+from game import flappy_bird_utils
 import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
@@ -143,6 +144,10 @@ class GameState:
         FPSCLOCK.tick(FPS)
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
         return image_data, reward, terminal
+
+    def exit(self, message=''):
+        print(message)
+        sys.exit()
 
 def getRandomPipe():
     """returns a randomly generated pipe"""
