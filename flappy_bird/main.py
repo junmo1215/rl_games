@@ -7,9 +7,8 @@ import cv2
 import numpy as np
 import datetime
 
-MAX_EPISODE = 50000
+MAX_EPISODE = 100000
 N_ACTIONS = 2
-
 MEMORY_SIZE = 50000
 MINIBATCH_SIZE = 32
 GAMMA = 0.99

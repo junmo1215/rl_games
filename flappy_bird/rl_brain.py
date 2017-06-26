@@ -43,14 +43,6 @@ class DeepQNetwork:
             del self.memory_list[0]
         self.time_step += 1
 
-    def random_action(self):
-        "返回一个随机动作"
-        n_actions = self.n_actions
-        action = np.zeros(n_actions)
-        action_index = random.randrange(n_actions)
-        action[action_index] = 1
-        return action
-
     def choose_action(self, observation):
         "根据当前状态选择要执行的动作"
         n_actions = self.n_actions
@@ -95,8 +87,8 @@ class DeepQNetwork:
             self.act_q_value: act_q_value_batch
         })
 
-        # save network every 100000 iteration
-        if self.time_step % 100000 == 0:
+        # save network every 10000 iteration
+        if self.time_step % 10000 == 0:
             self.saver.save(self.session, 'saved_networks/network-dqn', global_step=self.time_step)
 
     def _create_network(self):
@@ -147,7 +139,7 @@ class DeepQNetwork:
         # saving and loading networks
         self.saver = tf.train.Saver()
         self.session = tf.InteractiveSession()
-        self.session.run(tf.initialize_all_variables())
+        self.session.run(tf.global_variables_initializer())
 
         checkpoint = tf.train.get_checkpoint_state("saved_networks")
         if checkpoint and checkpoint.model_checkpoint_path:

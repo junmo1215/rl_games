@@ -330,6 +330,31 @@ $$
 
 其他的事情就是喂数据给这个网络让网络不停的优化就可以了。
 
+# 运行
+
+## 运行所需环境
+
+- Python2.7 or Python3.5以上
+- TensorFlow 1.0 以上
+    - windows系统tensorflow GPU版本目前只支持python 3.5
+    - [windows tensorflow安装教程](https://www.tensorflow.org/install/install_windows)
+    - [Ubuntu tensorflow安装教程](https://bigballon.github.io/posts/Learn_DL_hard_way_01.html)
+- pygame
+- openCV-Python
+    - [windows python3 安装openCV](https://www.solarianprogrammer.com/2016/09/17/install-opencv-3-with-python-3-on-windows/)
+    - [Ubuntu16.04 anaconda 安装openCV](http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/)
+
+## 运行
+
+```
+python main.py
+```
+
+# 不足
+
+- 虽然会隔一段时间保存一次神经网络的参数，但是 INITIAL_EPSILON 和 memory_list 没有保存下来，每次重新训练又会初始化一次，但是应该没有太大的影响
+- _create_network里面的代码包含了costfunction，分开的话看的清楚一些
+
 # 参考
 
 1. [Playing Atari with Deep Reinforcement Learning](https://arxiv.org/pdf/1312.5602.pdf)
