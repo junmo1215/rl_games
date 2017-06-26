@@ -49,7 +49,7 @@ flappy_bird
 这里的每个循环代表着游戏的每一步，可以大致的理解成画面的每一帧，在每次循环中需要先选取一个动作（按下屏幕让小鸟跳跃或者什么都不做），然后游戏引擎收到这个动作之后会返回新的游戏画面和reward以及告诉玩家游戏是否结束。于是我们就可以不断的获得 {state_1, action_1, reward_1, state_2, action_2, ..., state_n, action_n, reward_n, state_T} 这样的一个集合。剩下的就是需要从很多这样的集合中学到这个游戏应该怎么玩（这个集合在实际的算法实现中有一些改变，这里只说大致的逻辑）
 
 核心的学习部分基于两个假设：
-1. MDP（Markov Decision Process）马尔科夫决策过程：下一个状态仅仅取决于当前的状态和当前的动作。只有基于了这个假设才有学习的意义，可以考虑得极端一点，下一个状态是完全随机出现的，意味着在我们的 {$s_1$, $a_1$, $r_1$, $s_2$} 这样的序列中，$s_2$和 $r_1$ 是随机出现的，我们就没有办法找出 $s_1$, $a_1$ 和 $s_2$, $r_1$ 之间的规律。直观的解释就是现在小鸟看到前面有一个缝隙，这次从缝隙穿过去了，安然无恙并且得到了一分，小鸟就知道下一次应该也要从水管之间的缝隙过去。但是如果不满足这个假设，下次小鸟从水管中经过，明明没有碰到水管小鸟也会挂掉，小鸟就会一脸懵逼，不知道这个游戏中的逻辑（state、action到reward和next_state的对应关系）是怎么样的，也就没有办法从这个序列中学到游戏的技巧了。
+1. MDP（Markov Decision Process）马尔科夫决策过程：下一个状态仅仅取决于当前的状态和当前的动作。当一个随机过程在给定现在状态及所有过去状态情况下，其未来状态的条件概率分布仅依赖于当前状态；换句话说，在给定现在状态时，它与过去状态（即该过程的历史路径）是条件独立的，那么此随机过程即具有马尔可夫性质。具有马尔可夫性质的过程通常称之为马尔可夫过程。<https://zh.wikipedia.org/wiki/%E9%A9%AC%E5%B0%94%E5%8F%AF%E5%A4%AB%E6%80%A7%E8%B4%A8>
 2. bellman equation：在一个序列求解的过程中，如果一个解的路径是最优路径，那么其中的每个片段都是当前的最佳路径(这个还比较好理解，具体可以参照演算法相关资料)。在这里可以理解成，从起点到终点会经过很多状态（假设$s_1$, $s_2$, $s_3$, ... ,$s_t$）。假设这条路径是整体reward最大的路径，那么其中的一些片段，比如{$s_1$, $s_2$, $s_3$} 就是 $s_1$ 到 $s_3$ reward最大的路径。
 
 从这两个假设中可以得到一些推论，这里直接给出结果：
@@ -363,3 +363,4 @@ python main.py
 4. [Paper Reading 1 - Playing Atari with Deep Reinforcement Learning - songrotek的专栏 - 博客频道 - CSDN.NET](http://blog.csdn.net/songrotek/article/details/50581011)
 5. [Deep Reinforcement Learning 基础知识（DQN方面） - songrotek的专栏 - 博客频道 - CSDN.NET](http://blog.csdn.net/songrotek/article/details/50580904)
 6. [莫烦Python](https://morvanzhou.github.io/tutorials/machine-learning/reinforcement-learning/)
+7. [马尔可夫性质 - 维基百科，自由的百科全书](https://zh.wikipedia.org/wiki/%E9%A9%AC%E5%B0%94%E5%8F%AF%E5%A4%AB%E6%80%A7%E8%B4%A8)
