@@ -42,6 +42,7 @@ class DeepQNetwork:
         if len(self.memory_list) > self.memory_size:
             del self.memory_list[0]
         self.time_step += 1
+        self.current_state = next_state
 
     def choose_action(self, observation):
         "根据当前状态选择要执行的动作"
@@ -57,8 +58,10 @@ class DeepQNetwork:
             action_index = np.argmax(q_value)
             action[action_index] = 1
 
+        # 减去一个很小的数，让训练快结束的时候随机的次数越来越少
+        # 这里写了两个奇怪的数字，要考虑能不能写成time_step的函数
         if self.epsilon > 0.0001:
-            self.epsilon -= (0.1 - 0.0001) / 3000000
+            self.epsilon -= 3.33e-8
 
         return action
 
