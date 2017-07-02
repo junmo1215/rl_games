@@ -1,6 +1,7 @@
 # coding:UTF-8
 
 from __future__ import print_function
+import sys
 import game.wrapped_flappy_bird as game
 from rl_brain import DeepQNetwork
 import cv2
@@ -12,7 +13,7 @@ N_ACTIONS = 2
 MEMORY_SIZE = 50000
 MINIBATCH_SIZE = 32
 GAMMA = 0.99
-INITIAL_EPSILON = 0.1
+INITIAL_EPSILON = 0
 
 def preprocess(observation, reshape):
     "将游戏画面转换成黑白并且调整图片大小"
@@ -63,4 +64,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) == 2 and sys.argv[1] == 'train':
+        INITIAL_EPSILON = 0.1
     main()

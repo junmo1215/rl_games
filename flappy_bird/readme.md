@@ -346,8 +346,16 @@ $$
 
 ## 运行
 
+- 查看效果：
+
 ```
 python main.py
+```
+
+- 继续训练(如果要重新训练删除saved_networks里面的文件就行了)
+
+```
+python main.py train
 ```
 
 # 不足
