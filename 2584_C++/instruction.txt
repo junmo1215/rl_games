@@ -1,0 +1,14 @@
+To make the sample program
+$ make # see makefile for deatils
+
+To run the sample program
+$ ./2048 # by default the program will run for 1000 games
+
+To specify the total games to run
+$ ./2048 --total=100000
+
+To save the statistic result to a file
+$ ./2048 --save=stat.bin # existing file will be overwrited
+
+To load and review the statistic result from a file
+$ ./2048 --load=stat.bin --summary
