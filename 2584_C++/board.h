@@ -45,7 +45,7 @@ public:
 	 * apply an action to the board
 	 * return the reward gained by the action, or -1 if the action is illegal
 	 */
-	static const int fibonacci[18];
+	static const int fibonacci[32];
 
 	int move(const int& opcode) {
 		switch (opcode) {
@@ -90,18 +90,6 @@ public:
 		}
 		return (*this != prev) ? score : -1;
 	}
-
-	// int move_left(){
-	// 	board prev = *this;
-	// 	int score = 0;
-	// 	for(int r = 0; r < 4; r++){
-	// 		auto& row = tile[r];
-
-	// 		for(int c = 0; c < 4; c++){
-
-	// 		}
-	// 	}
-	// }
 
 	int move_right() {
 		reflect_horizontal();
@@ -174,17 +162,6 @@ public:
 			out << buff << std::endl;
 		}
 		out << "+------------------------+" << std::endl;
-		// out << std::endl;
-		// out << "+------------------------+" << std::endl;
-		// for (int r = 0; r < 4; r++) {
-		// 	std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-		// 		(b[r][0]), // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
-		// 		(b[r][1]),
-		// 		(b[r][2]),
-		// 		(b[r][3]));
-		// 	out << buff << std::endl;
-		// }
-		// out << "+------------------------+" << std::endl;
 		return out;
 	}
 
@@ -192,9 +169,9 @@ private:
 	std::array<std::array<int, 4>, 4> tile;
 };
 
-const int board::fibonacci[18]= {
-	0, 1, 2, 3,
-	5, 8, 13, 21,
-	34, 55, 89, 144,
-	233, 377, 610, 987,
-	1597, 2584};
+const int board::fibonacci[32]= {
+	0, 1, 2, 3, 5, 8, 13, 21,
+	34, 55, 89, 144, 233, 377, 610, 987,
+	1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368,
+	75025, 121393, 196418, 317811,
+	514229, 832040, 1346269, 2178309};
