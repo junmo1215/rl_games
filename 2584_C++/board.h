@@ -2,6 +2,7 @@
 #include <array>
 #include <iostream>
 #include <cstdio>
+#include <stdlib.h>
 
 /**
  * array-based board for 2048
@@ -44,6 +45,8 @@ public:
 	 * apply an action to the board
 	 * return the reward gained by the action, or -1 if the action is illegal
 	 */
+	static const int fibonacci[18];
+
 	int move(const int& opcode) {
 		switch (opcode) {
 		case 0: return move_up();
@@ -54,7 +57,11 @@ public:
 		}
 	}
 
-	// todo: 目前是2048的规则，之后要改
+	bool can_combine(int& tile, int& hold){
+		// 好像两个值相等或者相邻都可以合并
+		return abs(tile - hold) <= 1;
+	}
+
 	int move_left() {
 		board prev = *this;
 		int score = 0;
@@ -66,9 +73,10 @@ public:
 				if (tile == 0) continue;
 				row[c] = 0;
 				if (hold) {
-					if (tile == hold) {
+					if (can_combine(tile, hold)) {
+						tile = (tile > hold) ? tile : hold;
 						row[top++] = ++tile;
-						score += (1 << tile);
+						score += (fibonacci[tile]);
 						hold = 0;
 					} else {
 						row[top++] = hold;
@@ -82,6 +90,19 @@ public:
 		}
 		return (*this != prev) ? score : -1;
 	}
+
+	// int move_left(){
+	// 	board prev = *this;
+	// 	int score = 0;
+	// 	for(int r = 0; r < 4; r++){
+	// 		auto& row = tile[r];
+
+	// 		for(int c = 0; c < 4; c++){
+
+	// 		}
+	// 	}
+	// }
+
 	int move_right() {
 		reflect_horizontal();
 		int score = move_left();
@@ -142,12 +163,6 @@ public:
 
 public:
     friend std::ostream& operator <<(std::ostream& out, const board& b) {
-		const int fibonacci[] = {
-			0, 1, 2, 3,
-			5, 8, 13, 21,
-			34, 55, 89, 144,
-			233, 377, 610, 987,
-			1597, 2584};
 		char buff[32];
 		out << "+------------------------+" << std::endl;
 		for (int r = 0; r < 4; r++) {
@@ -176,3 +191,10 @@ public:
 private:
 	std::array<std::array<int, 4>, 4> tile;
 };
+
+const int board::fibonacci[18]= {
+	0, 1, 2, 3,
+	5, 8, 13, 21,
+	34, 55, 89, 144,
+	233, 377, 610, 987,
+	1597, 2584};
