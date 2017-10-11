@@ -58,8 +58,8 @@ public:
 	}
 
 	bool can_combine(int& tile, int& hold){
-		// 好像两个值相等或者相邻都可以合并
-		return abs(tile - hold) <= 1;
+		// 合并规则是两个值在数列中相邻或者同时为1的时候可以合并
+		return (tile == 1 && hold == 1) || abs(tile - hold) == 1;
 	}
 
 	int move_left() {

@@ -77,7 +77,8 @@ int main(int argc, const char* argv[]) {
             if (move.apply(game) == -1) break;
             stat.save_action(move);
             if (who.check_for_win(game)) break;
-            std::cout << game;
+            // std::cout << game;
+            // std::cin.ignore();
         }
         agent& win = stat.last_turns(play, evil);
         stat.close_episode(win.name());
