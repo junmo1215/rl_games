@@ -6,7 +6,7 @@ To judge a statistic file
 $ ./2584-judge --load=stat.bin --check
 
 To judge a statistic file with the score
-$ ./2584-judge --load=stat.bin --check --check
+$ ./2584-judge --load=stat.bin --check --summary
 
 To dump a specific record in a statistic file
 $ ./2584-judge --load=stat.bin --dump=100
