@@ -43,8 +43,8 @@ protected:
 /**
  * evil (environment agent)
  * add a new random tile on board, or do nothing if the board is full
- * 2-tile: 90%
- * 4-tile: 10%
+ * 1-tile: 90%
+ * 2-tile: 10%
  */
 class rndenv : public agent {
 public:
@@ -56,6 +56,7 @@ public:
 	virtual action take_action(const board& after) {
 		int space[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 		std::shuffle(space, space + 16, engine);
+		// std::cout << after << std::endl;
 		for (int pos : space) {
 			if (after(pos) != 0) continue;
 			std::uniform_int_distribution<int> popup(0, 9);

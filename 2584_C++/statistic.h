@@ -107,6 +107,7 @@ public:
 		return take_turns(evil, play);
 	}
 
+	// 重写运算符
 	friend std::ostream& operator <<(std::ostream& out, const statistic& stat) {
 		auto size = stat.data.size();
 		out.write(reinterpret_cast<char*>(&size), sizeof(size));

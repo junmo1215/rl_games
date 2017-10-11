@@ -54,6 +54,7 @@ public:
 		}
 	}
 
+	// todo: 目前是2048的规则，之后要改
 	int move_left() {
 		board prev = *this;
 		int score = 0;
@@ -85,7 +86,6 @@ public:
 		reflect_horizontal();
 		int score = move_left();
 		reflect_horizontal();
-		return score;
 		return score;
 	}
 	int move_up() {
@@ -142,20 +142,37 @@ public:
 
 public:
     friend std::ostream& operator <<(std::ostream& out, const board& b) {
+		const int fibonacci[] = {
+			0, 1, 2, 3,
+			5, 8, 13, 21,
+			34, 55, 89, 144,
+			233, 377, 610, 987,
+			1597, 2584};
 		char buff[32];
 		out << "+------------------------+" << std::endl;
 		for (int r = 0; r < 4; r++) {
 			std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-				(1 << b[r][0]) & -2u, // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
-				(1 << b[r][1]) & -2u,
-				(1 << b[r][2]) & -2u,
-				(1 << b[r][3]) & -2u);
+				(fibonacci[b[r][0]]), // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
+				(fibonacci[b[r][1]]),
+				(fibonacci[b[r][2]]),
+				(fibonacci[b[r][3]]));
 			out << buff << std::endl;
 		}
 		out << "+------------------------+" << std::endl;
+		// out << std::endl;
+		// out << "+------------------------+" << std::endl;
+		// for (int r = 0; r < 4; r++) {
+		// 	std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
+		// 		(b[r][0]), // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
+		// 		(b[r][1]),
+		// 		(b[r][2]),
+		// 		(b[r][3]));
+		// 	out << buff << std::endl;
+		// }
+		// out << "+------------------------+" << std::endl;
 		return out;
 	}
 
 private:
-    std::array<std::array<int, 4>, 4> tile;
+	std::array<std::array<int, 4>, 4> tile;
 };

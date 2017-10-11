@@ -10,11 +10,16 @@ public:
 
 	int apply(board& b) const {
 		if ((0b11 & opcode) == (opcode)) {
+			// 玩家移动
 			// player action (slide up, right, down, left)
 			return b.move(opcode);
 		} else if (b(opcode & 0x0f) == 0) {
+			// 环境放置新的tile
 			// environment action (place a new tile)
 			b(opcode & 0x0f) = (opcode >> 4);
+			// std::cout << opcode << std::endl;
+			// std::cout << b << std::endl;
+			// throw;
 			return 0;
 		}
 		return -1;
@@ -33,6 +38,8 @@ public:
 	static action move(const int& oper) {
 		return action(oper);
 	}
+
+	// 这里把序号和位置放在了一起，最后四位表示放置的位置(0000~1111)，前面是数列的索引
 	static action place(const int& tile, const int& pos) {
 		return action((tile << 4) | (pos));
 	}
