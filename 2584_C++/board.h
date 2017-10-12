@@ -61,7 +61,7 @@ public:
 		// 合并规则是两个值在数列中相邻或者同时为1的时候可以合并
 		return (tile == 1 && hold == 1) || abs(tile - hold) == 1;
 	}
-
+ 
 	int move_left() {
 		board prev = *this;
 		int score = 0;

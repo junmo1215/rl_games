@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "board.h"
 #include "action.h"
+#include "weight.h"
 
 class agent {
 public:
@@ -76,20 +77,80 @@ private:
  */
 class player : public agent {
 public:
-	player(const std::string& args = "") : agent("name=player " + args) {
+	player(const std::string& args = "") : agent("name=player " + args),  alpha(0.0025f) {
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
+		if (property.find("alpha") != property.end())
+			alpha = float(property["alpha"]);
+
+		if (property.find("load") != property.end())
+			load_weights(property["load"]);
+		// TODO: initialize the n-tuple network
+		// const int feature_num = 16 * 16 * 16 * 16;
+		// float n_tuple[feature_num];
+		
+	}
+
+	~player() {
+		if (property.find("save") != property.end())
+			save_weights(property["save"]);
+	}
+
+	virtual void open_episode(const std::string& flag = "") {
+		episode.clear();
+		episode.reserve(32768);
+	}
+
+	virtual void close_episode(const std::string& flag = "") {
+		// TODO: train the n-tuple network by TD(0)
 	}
 
 	virtual action take_action(const board& before) {
-		int opcode[] = { 0, 1, 2, 3 };
-		std::shuffle(opcode, opcode + 4, engine);
-		for (int op : opcode) {
-			board b = before;
-			if (b.move(op) != -1) return action::move(op);
-		}
-		return action();
+		action best;
+		// TODO: select a proper action
+		// best = choose_action(before);
+		// TODO: push the step into episode
+		return best;
 	}
+
+public:
+	virtual void load_weights(const std::string& path) {
+		std::ifstream in;
+		in.open(path.c_str(), std::ios::in | std::ios::binary);
+		if (!in.is_open()) std::exit(-1);
+		size_t size;
+		in.read(reinterpret_cast<char*>(&size), sizeof(size));
+		weights.resize(size);
+		for (weight& w : weights)
+			in >> w;
+		in.close();
+	}
+
+	virtual void save_weights(const std::string& path) {
+		std::ofstream out;
+		out.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+		if (!out.is_open()) std::exit(-1);
+		size_t size = weights.size();
+		out.write(reinterpret_cast<char*>(&size), sizeof(size));
+		for (weight& w : weights)
+			out << w;
+		out.flush();
+		out.close();
+	}
+
+private:
+	std::vector<weight> weights;
+
+	struct state {
+		// TODO: select the necessary components of a state
+		board before;
+		board after;
+		action move;
+		int reward;
+	};
+
+	std::vector<state> episode;
+	float alpha;
 
 private:
 	std::default_random_engine engine;

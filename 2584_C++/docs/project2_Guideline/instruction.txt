@@ -1,0 +1,11 @@
+Before you run the program
+$ chmod +x 2048-ltdl
+
+Dump the TD(0) backward training process
+$ ./2048-ltdl --backward
+
+Dump the TD(0) backward training process with true expected value
+$ ./2048-ltdl --backward --expected
+
+View the usage
+$ ./2048-ltdl --help
