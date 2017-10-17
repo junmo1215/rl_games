@@ -85,10 +85,12 @@ public:
 
 		if (property.find("load") != property.end())
 			load_weights(property["load"]);
-		// TODO: initialize the n-tuple network
-		// const int feature_num = 16 * 16 * 16 * 16;
-		// float n_tuple[feature_num];
-		
+		// initialize the n-tuple network
+		const int feature_num = possbile_index * possbile_index * possbile_index * possbile_index;
+		weights.push_back(weight(feature_num));
+		weights.push_back(weight(feature_num));
+		weights.push_back(weight(feature_num));
+		weights.push_back(weight(feature_num));
 	}
 
 	~player() {
@@ -103,13 +105,63 @@ public:
 
 	virtual void close_episode(const std::string& flag = "") {
 		// TODO: train the n-tuple network by TD(0)
+		for(state step : episode){
+			// std::cout << "before:" << std::endl;
+			// std::cout << step.before;
+			// std::cout << "actions:" << step.move.name() << std::endl;
+			// std::cout << "reward:" << step.reward << std::endl;
+			// std::cout << "after:" << std::endl;
+			// std::cout << step.after;
+
+
+			std::vector<int> features = get_features(step.before);
+			for(int i = 0; i < 4; i++){
+				// std::cout << "before learning " << weights[i][features[i]] << std::endl;
+				weights[i][features[i]] += alpha * (step.reward + board_value(step.after) - lookup_value(features));
+				// std::cout << "after learning " << weights[i][features[i]] << std::endl;
+			}
+
+			// std::cin.ignore();
+			// std::cout << "\033[2J\033[1;1H";
+		}
 	}
 
 	virtual action take_action(const board& before) {
-		action best;
-		// TODO: select a proper action
+		// select a proper action
+		int best_op = 0;
+		float best_vs = -1;
+		board after;
+		int best_reward = 0;
+
+		// 模拟四种动作，取实验后盘面最好的动作作为best
+		for(int op: {0, 1, 2, 3}){
+			board b = before;
+			int reward = b.move(op);
+			if(reward != -1){
+				float v_s = board_value(b);
+				if(v_s > best_vs){
+					best_op = op;
+					best_vs = v_s;
+					after = b;
+					best_reward = reward;
+				}
+			}
+		}
+		action best(best_op);
+
 		// best = choose_action(before);
+		// std::vector<int> features = get_features(before);
+		// std::cout << before;
+		// std::cout << features[0] << std::endl;
+		// std::cout << features[1] << std::endl;
+		// std::cout << features[2] << std::endl;
+		// std::cout << features[3] << std::endl;
+
 		// TODO: push the step into episode
+		struct state step = {before, after, best, best_reward};
+		// std::cout << step.before << std::endl;
+		// std::cout << step.reward << std::endl;
+		episode.push_back(step);
 		return best;
 	}
 
@@ -154,4 +206,50 @@ private:
 
 private:
 	std::default_random_engine engine;
+
+private:
+	/**
+	 * 根据当前局面提取特征
+	 */
+	std::vector<int> get_features(const board& before){
+		std::vector<int> features;
+		int index1[4] = {0, 4, 8, 12};
+		int index2[4] = {1, 5, 9, 13};
+		int index3[4] = {2, 6, 10, 14};
+		int index4[4] = {3, 7, 11, 15};
+		features.push_back(get_feature(before, index1));
+		features.push_back(get_feature(before, index2));
+		features.push_back(get_feature(before, index3));
+		features.push_back(get_feature(before, index4));
+		return features;
+	}
+
+	int get_feature(const board& b, const int indexs[4]){
+		int result = 0;
+		for(int i = 0; i < 4; i++){
+			result *= 32;
+			int r = indexs[i] / 4;
+			int c = indexs[i] % 4;
+			result += b[r][c];
+		}
+		return result;
+	}
+
+	/**
+	 * 根据局面解析出来的feature获取当前的状态动作值
+	 */
+	float lookup_value(const std::vector<int> features){
+		float v_s = 0;
+		for(int i = 0; i < 4; i++){
+			v_s += weights[0][features[i]];
+		}
+		return v_s;
+	}
+
+	/**
+	 * 获取盘面的估值
+	 */
+	float board_value(const board& b){
+		return lookup_value(get_features(b));
+	}
 };

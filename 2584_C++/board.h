@@ -20,6 +20,16 @@
  * (12) (13) (14) (15)
  *
  */
+
+static const int fibonacci[32]= {
+	0, 1, 2, 3, 5, 8, 13, 21,
+	34, 55, 89, 144, 233, 377, 610, 987,
+	1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368,
+	75025, 121393, 196418, 317811,
+	514229, 832040, 1346269, 2178309};
+
+static const int possbile_index = 32;
+
 class board {
 
 public:
@@ -45,7 +55,6 @@ public:
 	 * apply an action to the board
 	 * return the reward gained by the action, or -1 if the action is illegal
 	 */
-	static const int fibonacci[32];
 
 	int move(const int& opcode) {
 		switch (opcode) {
@@ -168,10 +177,3 @@ public:
 private:
 	std::array<std::array<int, 4>, 4> tile;
 };
-
-const int board::fibonacci[32]= {
-	0, 1, 2, 3, 5, 8, 13, 21,
-	34, 55, 89, 144, 233, 377, 610, 987,
-	1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368,
-	75025, 121393, 196418, 317811,
-	514229, 832040, 1346269, 2178309};
