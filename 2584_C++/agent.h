@@ -149,6 +149,16 @@ public:
 		}
 		action best(best_op);
 
+		// int opcode[] = {0, 1, 2, 3};
+		// std::shuffle(opcode, opcode + 4, engine);
+		// for(int op: opcode){
+		// 	board b = before;
+		// 	if(b.move(op) != -1){
+		// 		return action::move(op);
+		// 	}
+		// }
+		// action best(best_op);
+
 		// best = choose_action(before);
 		// std::vector<int> features = get_features(before);
 		// std::cout << before;
@@ -241,7 +251,7 @@ private:
 	float lookup_value(const std::vector<int> features){
 		float v_s = 0;
 		for(int i = 0; i < 4; i++){
-			v_s += weights[0][features[i]];
+			v_s += weights[i][features[i]];
 		}
 		return v_s;
 	}
