@@ -20,8 +20,13 @@
 #include "action.h"
 #include "agent.h"
 #include "statistic.h"
+#include <cstdio>
+#include <cstring>
 
 int main(int argc, const char* argv[]) {
+
+    // freopen("1.txt","w",stdout);
+
     std::cout << "2584: ";
     std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
     std::cout << std::endl << std::endl;
@@ -65,18 +70,61 @@ int main(int argc, const char* argv[]) {
     player play(play_args);
     rndenv evil(evil_args);
 
+    long long i = 0;
     while (!stat.is_finished()) {
+        i++;
+        std::cout << i << std::endl;
         play.open_episode("~:" + evil.name());
         evil.open_episode(play.name() + ":~");
 
         stat.open_episode(play.name() + ":" + evil.name());
         board game = stat.make_empty_board();
+
+        // std::cout << game << std::endl;
+        // action temp;
+        // // temp = std::move(action::place(2, 0));
+        // (action::place(2, 0)).apply(game);
+        // (action::place(12, 1)).apply(game);
+        // (action::place(8, 2)).apply(game);
+        // (action::place(3, 3)).apply(game);
+        // (action::place(2, 4)).apply(game);
+        // (action::place(5, 5)).apply(game);
+        // (action::place(5, 6)).apply(game);
+        // (action::place(5, 7)).apply(game);
+
+        // (action::place(14, 8)).apply(game);
+        // (action::place(11, 9)).apply(game);
+        // (action::place(3, 10)).apply(game);
+        // (action::place(2, 11)).apply(game);
+        // (action::place(3, 12)).apply(game);
+        // (action::place(9, 13)).apply(game);
+        // (action::place(1, 14)).apply(game);
+        // (action::place(2, 15)).apply(game);
+        
+        // std::cout << game << std::endl;
+        // // throw;
+        long long j = 0;
+        bool print = false;
         while (true) {
+            j++;
             agent& who = stat.take_turns(play, evil);
-            action move = who.take_action(game);
+            // agent& who = play;
+            action move = who.take_action(game, print);
+            // action move;
+            if(i == 177 && j >= 782 && j <= 790){
+                // move = who.take_action(game, true);
+                print = false;
+                // std::cout << game << std::endl;
+                // std::cout << move.name() << std::endl;
+            }
+            else{
+                print = false;
+                // move = who.take_action(game);
+            }
             if (move.apply(game) == -1) break;
             stat.save_action(move);
             if (who.check_for_win(game)) break;
+            // throw;
             // std::cout << game;
             // std::cin.ignore();
         }
@@ -85,6 +133,9 @@ int main(int argc, const char* argv[]) {
 
         play.close_episode(win.name());
         evil.close_episode(win.name());
+
+        if(i % 1000 == 0)
+            stat.summary();
     }
 
     if (summary) {

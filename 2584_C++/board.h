@@ -28,7 +28,7 @@ static const int fibonacci[32]= {
 	75025, 121393, 196418, 317811,
 	514229, 832040, 1346269, 2178309};
 
-static const int possbile_index = 32;
+static const long long possbile_index = 32;
 
 class board {
 
