@@ -87,7 +87,7 @@ public:
 		if (property.find("load") != property.end())
 			load_weights(property["load"]);
 		// initialize the n-tuple network
-		const long long feature_num = possbile_index * possbile_index * possbile_index * possbile_index;
+		const long long feature_num = POSSIBLE_INDEX * POSSIBLE_INDEX * POSSIBLE_INDEX * POSSIBLE_INDEX;
 		weights.push_back(weight(feature_num));
 		weights.push_back(weight(feature_num));
 		weights.push_back(weight(feature_num));
@@ -105,7 +105,7 @@ public:
 	}
 
 	virtual void close_episode(const std::string& flag = "") {
-		// TODO: train the n-tuple network by TD(0)
+		// train the n-tuple network by TD(0)
 		// for(state step : episode){
 		board before = episode[episode.size() - 1].after;
 		std::vector<long long> features = get_features(before);

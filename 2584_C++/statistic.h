@@ -11,7 +11,18 @@
 
 class statistic {
 public:
-	statistic(const size_t& total, const size_t& block = 0) : total(total), block(block ? block : total) {}
+	/**
+	 * the total episodes to run
+	 * the block size of statistic
+	 * the limit of saving records
+	 *
+	 * note that total >= limit >= block
+	 */
+	statistic(const size_t& total, const size_t& block = 0, const size_t& limit = 0)
+		: total(total),
+		  block(block ? block : this->total),
+		  limit(std::max(limit, this->block)),
+		  count(0) {}
 
 public:
 	/**
@@ -36,7 +47,7 @@ public:
 	 */
 	void show() const {
 		int block = std::min(data.size(), this->block);
-		size_t sum = 0, max = 0, opc = 0, stat[16] = { 0 };
+		size_t sum = 0, max = 0, opc = 0, stat[POSSIBLE_INDEX] = { 0 };
 		uint64_t duration = 0;
 		auto it = data.end();
 		for (int i = 0; i < block; i++) {
@@ -57,14 +68,20 @@ public:
 		float avg = float(sum) / block;
 		float coef = 100.0 / block;
 		float ops = opc * 1000.0 / duration;
-		std::cout << data.size() << "\t";
-		std::cout << "avg = " << int(avg) << ", ";
-		std::cout << "max = " << int(max) << ", ";
-		std::cout << "ops = " << int(ops) << std::endl;
+		std::cout << count << "\t";
+		std::cout << "avg = " << unsigned(avg) << ", ";
+		std::cout << "max = " << unsigned(max) << ", ";
+		std::cout << "ops = " << unsigned(ops) << std::endl;
+		// t表示的是数列的序号
+		// stat[i]: 数列中第i个元素是这次游戏中最大值的次数
+		// c表示的是在这个循环里面一共统计了多少次最大次数，按照block=1000的情况就是c不会大于1000
 		for (int t = 0, c = 0; c < block; c += stat[t++]) {
 			if (stat[t] == 0) continue;
-			int accu = std::accumulate(stat + t, stat + 16, 0);
-			std::cout << "\t" << ((1 << t) & -2u) << "\t" << (accu * coef) << "%";
+			int accu = std::accumulate(stat + t, stat + POSSIBLE_INDEX, 0);
+			// std::cout << "accu: " << accu << "\t" << "coef: " << coef << std::endl;
+			// std::cout << "aaa" << std::endl;
+			// std::cout << "c: " << c << "\t" << "t: " << t << "\t" << "stat[t]: " << stat[t] << std::endl;
+			std::cout << "\t" << fibonacci[t] << "\t" << (accu * coef) << "%";
 			std::cout << "\t(" << (stat[t] * coef) << "%)" << std::endl;
 		}
 		std::cout << std::endl;
@@ -78,17 +95,18 @@ public:
 	}
 
 	bool is_finished() const {
-		return data.size() >= total;
+		return count >= total;
 	}
 
 	void open_episode(const std::string& flag = "") {
+		if (count++ >= limit) data.pop_front();
 		data.emplace_back();
 		data.back().tick();
 	}
 
 	void close_episode(const std::string& flag = "") {
 		data.back().tock();
-		if (data.size() % block == 0) show();
+		if (count % block == 0) show();
 	}
 
 	board make_empty_board() {
@@ -118,7 +136,7 @@ public:
 	friend std::istream& operator >>(std::istream& in, statistic& stat) {
 		auto size = stat.data.size();
 		in.read(reinterpret_cast<char*>(&size), sizeof(size));
-		stat.total = stat.block = size;
+		stat.total = stat.block = stat.limit = stat.count = size;
 		stat.data.resize(size);
 		for (record& rec : stat.data) in >> rec;
 		return in;
@@ -168,5 +186,7 @@ private:
 
 	size_t total;
 	size_t block;
+	size_t limit;
+	size_t count;
 	std::list<record> data;
 };
