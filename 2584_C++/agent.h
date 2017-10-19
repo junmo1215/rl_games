@@ -245,49 +245,39 @@ private:
 private:
 	/**
 	 * 根据当前局面提取特征
-	 * 
-	 * flag: 判断旋转和对称的标志
-	 * 	0：向右旋转0次（原始索引，不翻转不对称）
-	 *  1：向右旋转0次，水平翻折
-	 *  2：向右旋转1次
-	 *  3：向右旋转1次，水平翻折
-	 *  4：向右旋转2次
-	 *  5：向右旋转2次，水平翻折
-	 *  6：向右旋转3次
-	 *  7：向右旋转3次，水平翻折
 	 */
-	std::vector<long long> get_features(const board& before, const int flag){
+	std::vector<long long> get_features(const board& before){
 		std::vector<long long> features;
 
-		std::vector<std::array<int, 4>> indexs;
-		indexs.push_back({0, 4, 8, 12});
-		indexs.push_back({1, 5, 9, 13});
-		indexs.push_back({0, 1, 2, 3});
-		indexs.push_back({4, 5, 6, 7});
+		// std::vector<std::array<int, 4>> indexs;
+		// indexs.push_back({0, 4, 8, 12});
+		// indexs.push_back({1, 5, 9, 13});
+		// indexs.push_back({0, 1, 2, 3});
+		// indexs.push_back({4, 5, 6, 7});
 
 		// if(print)
 		// 	print_index(indexs);
 
 		// std::cout << "flag: " << flag << std::endl;
-		// int indexs[4][4] = {
-		// 	{0, 4, 8, 12},
-		// 	{1, 5, 9, 13},
-		// 	{0, 1, 2, 3},
-		// 	{4, 5, 6, 7}
-		// };
+		int indexs[4][4] = {
+			{0, 4, 8, 12},
+			{1, 5, 9, 13},
+			{0, 1, 2, 3},
+			{4, 5, 6, 7}
+		};
 		// int index1[4] = {0, 4, 8, 12};
 		// int index2[4] = {1, 5, 9, 13};
 		// int index3[4] = {0, 1, 2, 3};
 		// int index4[4] = {4, 5, 6, 7};
-		for(int i = 0; i < flag / 2; i++){
-			// std::cout << "rotate_right" << std::endl;
-			indexs = rotate_right(indexs);
-		}
+		// for(int i = 0; i < flag / 2; i++){
+		// 	// std::cout << "rotate_right" << std::endl;
+		// 	indexs = rotate_right(indexs);
+		// }
 
-		if(flag % 2 == 1){
-			// std::cout << "reflect_horizontal" << std::endl;
-			indexs = reflect_horizontal(indexs);
-		}
+		// if(flag % 2 == 1){
+		// 	// std::cout << "reflect_horizontal" << std::endl;
+		// 	indexs = reflect_horizontal(indexs);
+		// }
 
 		// if(print)
 		// 	print_index(indexs);
@@ -300,16 +290,16 @@ private:
 		return features;
 	}
 	
-	void print_index(const std::vector<std::array<int, 4>> indexs){
-		for(int i = 0; i < 4; i++){
-			for(int j = 0; j < 4; j++){
-				std::cout << indexs[i][j] << "\t";
-			}
-			std::cout << std::endl;
-		}
-	}
+	// void print_index(const std::vector<std::array<int, 4>> indexs){
+	// 	for(int i = 0; i < 4; i++){
+	// 		for(int j = 0; j < 4; j++){
+	// 			std::cout << indexs[i][j] << "\t";
+	// 		}
+	// 		std::cout << std::endl;
+	// 	}
+	// }
 
-	long long get_feature(const board& b, const std::array<int, 4> indexs){
+	long long get_feature(const board& b, const int indexs[4]){
 		long long result = 0;
 		for(int i = 0; i < 4; i++){
 			result *= 32;
@@ -335,57 +325,71 @@ private:
 	 * 获取盘面的估值
 	 */
 	float board_value(const board& b){
-		return lookup_value(get_features(b, 0));
+		return lookup_value(get_features(b));
 	}
 
 	void train_weights(const board& b, const board& next_b, const int reward){
 		// 旋转对称加起来导致局面有八种变化
-		for(int i = 0; i < 8; i++){
-			std::vector<long long> features = get_features(b, i);
-			std::vector<long long> next_features = get_features(next_b, i);
+		for(int i = 0; i < 1; i++){
+			board temp1 = b;
+			board temp2 = next_b;
+			for(int j = 0; j < i / 2; j++){
+				temp1.rotate_right();
+				temp2.rotate_right();
+			}
+
+			if(i % 2 == 1){
+				temp1.reflect_horizontal();
+				temp2.reflect_horizontal();
+			}
+
+			std::vector<long long> features = get_features(temp1);
+			std::vector<long long> next_features = get_features(temp2);
 			
 			for(int j = 0; j < 4; j++){
-				// std::cout << "before learning " << weights[i][features[i]] << std::endl;
 				weights[j][features[j]] += alpha * (reward + lookup_value(next_features) - lookup_value(features));
-				// std::cout << "after learning " << weights[i][features[i]] << std::endl;
 			}
 		}
 			
 	}
 
 	void train_weights(const board& b){
-		// std::cout << "enter train_weights" << std::endl;
-
 		// 旋转对称加起来导致局面有八种变化
 		for(int i = 0; i < 8; i++){
-			std::vector<long long> features = get_features(b, i);
+			board temp = b;
+			for(int j = 0; j < i / 2; j++){
+				temp.rotate_right();
+			}
+
+			if(i % 2 == 1){
+				temp.reflect_horizontal();
+			}
+			std::vector<long long> features = get_features(temp);
 
 			for(int j = 0; j < 4; j++){
-				// std::cout << "before learning " << weights[i][features[i]] << std::endl;
 				weights[j][features[j]] += alpha * (0.0 - lookup_value(features));
-				// std::cout << "after learning " << weights[i][features[i]] << std::endl;
 			}
 		}
 	}
 
-	std::vector<std::array<int, 4>> rotate_right(std::vector<std::array<int, 4>> indexs){
-		for (int i = 0; i < 4; i++) {
-			for(int j = 0; j < 4; j++){
-				int temp = indexs[i][j];
-				indexs[i][j] = (temp % 4) * 4 - (temp / 4) + 3;
-			}
-		}
-		return indexs;
-	}
+	// std::vector<std::array<int, 4>> rotate_right(std::vector<std::array<int, 4>> indexs){
+	// 	for (int i = 0; i < 4; i++) {
+	// 		for(int j = 0; j < 4; j++){
+	// 			int temp = indexs[i][j];
+	// 			indexs[i][j] = (temp % 4) * 4 - (temp / 4) + 3;
+	// 		}
+	// 	}
+	// 	return indexs;
+	// }
 
-	std::vector<std::array<int, 4>> reflect_horizontal(std::vector<std::array<int, 4>> indexs){
-		// std::vector<std::array<int, 4>> result;
-		for (int i = 0; i < 4; i++) {
-			for(int j = 0; j < 4; j++){
-				int temp = indexs[i][j];
-				indexs[i][j] = (temp / 4) * 4 - (temp % 4) + 3;
-			}
-		}
-		return indexs;
-	}
+	// std::vector<std::array<int, 4>> reflect_horizontal(std::vector<std::array<int, 4>> indexs){
+	// 	// std::vector<std::array<int, 4>> result;
+	// 	for (int i = 0; i < 4; i++) {
+	// 		for(int j = 0; j < 4; j++){
+	// 			int temp = indexs[i][j];
+	// 			indexs[i][j] = (temp / 4) * 4 - (temp % 4) + 3;
+	// 		}
+	// 	}
+	// 	return indexs;
+	// }
 };
