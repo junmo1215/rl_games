@@ -107,19 +107,19 @@ public:
 	virtual void close_episode(const std::string& flag = "") {
 		// train the n-tuple network by TD(0)
 		// for(state step : episode){
-		board before = episode[episode.size() - 1].after;
-		std::vector<long long> features = get_features(before);
+		board board_terminal = episode[episode.size() - 1].after;
+		std::vector<long long> features = get_features(board_terminal);
 		
 		for(int j = 0; j < 4; j++){
 			// std::cout << "before learning " << weights[i][features[i]] << std::endl;
-			weights[j][features[j]] += alpha * (0.0 - board_value(before));
+			weights[j][features[j]] += alpha * (0.0 - lookup_value(features));
 			// std::cout << "after learning " << weights[i][features[i]] << std::endl;
 		}
 		// std::cout << "updating !!" << std::endl;
 		// before = episode[episode.size() - 2].after;
 		for(int i = episode.size() - 2; i >= 0; i--){
-			before = episode[i + 1].after;
 			state step = episode[i];
+			state step_t_1 = episode[i + 1];
 
 			// std::cout << "before:" << std::endl;
 			// std::cout << step.before;
@@ -133,7 +133,7 @@ public:
 			
 			for(int j = 0; j < 4; j++){
 				// std::cout << "before learning " << weights[i][features[i]] << std::endl;
-				weights[j][features[j]] += alpha * (episode[i + 1].reward + board_value(before) - board_value(step.after));
+				weights[j][features[j]] += alpha * (step_t_1.reward + board_value(step_t_1.after) - lookup_value(features));
 				// std::cout << "after learning " << weights[i][features[i]] << std::endl;
 			}	
 			// std::cin.ignore();
@@ -247,8 +247,8 @@ private:
 		std::vector<long long> features;
 		int index1[4] = {0, 4, 8, 12};
 		int index2[4] = {1, 5, 9, 13};
-		int index3[4] = {2, 6, 10, 14};
-		int index4[4] = {3, 7, 11, 15};
+		int index3[4] = {0, 1, 2, 3};
+		int index4[4] = {4, 5, 6, 7};
 		features.push_back(get_feature(before, index1));
 		features.push_back(get_feature(before, index2));
 		features.push_back(get_feature(before, index3));
