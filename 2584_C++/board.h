@@ -23,7 +23,11 @@
 
 static const int POSSIBLE_INDEX = 32;
 
-static const int MAX_INDEX = 20;
+static const int MAX_INDEX = 24;
+
+static const int TUPLE_NUM = 32;
+
+static const int TUPLE_LENGTH = 6;
 
 static const int fibonacci[POSSIBLE_INDEX]= {
 	0, 1, 2, 3, 5, 8, 13, 21,
@@ -32,6 +36,7 @@ static const int fibonacci[POSSIBLE_INDEX]= {
 	75025, 121393, 196418, 317811,
 	514229, 832040, 1346269, 2178309};
 
+static const float MIN_FLOAT = -99999999;
 
 class board {
 
