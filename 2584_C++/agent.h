@@ -9,6 +9,8 @@
 #include "action.h"
 #include "weight.h"
 
+static const float MIN_FLOAT = -99999999;
+
 class agent {
 public:
 	agent(const std::string& args = "") {
@@ -87,11 +89,11 @@ public:
 		if (property.find("load") != property.end())
 			load_weights(property["load"]);
 		// initialize the n-tuple network
-		const long long feature_num = POSSIBLE_INDEX * POSSIBLE_INDEX * POSSIBLE_INDEX * POSSIBLE_INDEX;
-		weights.push_back(weight(feature_num));
-		weights.push_back(weight(feature_num));
-		weights.push_back(weight(feature_num));
-		weights.push_back(weight(feature_num));
+		const long long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
+		for(int i = 0; i < 8; i++){
+			weights.push_back(weight(feature_num));
+			weights.push_back(weight(feature_num));
+		}
 	}
 
 	~player() {
@@ -108,7 +110,13 @@ public:
 		// train the n-tuple network by TD(0)
 		// for(state step : episode){
 		board board_terminal = episode[episode.size() - 1].after;
-
+		// std::cout << episode[episode.size() - 1].after << std::endl;
+		// std::cout << episode[episode.size() - 1].before << std::endl;
+		// std::cout << episode[episode.size() - 2].after << std::endl;
+		// std::cout << episode[episode.size() - 2].before << std::endl;
+		// // std::cout << episode[0].after << std::endl;
+		// // std::cout << episode[1].after << std::endl;
+		// throw;
 		train_weights(board_terminal);
 		// std::vector<long long> features = get_features(b_terminal);
 		
@@ -151,7 +159,7 @@ public:
 
 		// select a proper action
 		int best_op = 0;
-		float best_vs = -99999999;
+		float best_vs = MIN_FLOAT;
 		board after;
 		int best_reward = 0;
 
@@ -162,7 +170,7 @@ public:
 			if(print)
 				printf("op: %d %s reward: %d \n", op, action(op).name().c_str(), reward);
 			if(reward != -1){
-				float v_s = board_value(b);
+				float v_s = board_value(b) + reward;
 				if(v_s > best_vs){
 					best_op = op;
 					best_vs = v_s;
@@ -192,11 +200,14 @@ public:
 		// std::cout << features[2] << std::endl;
 		// std::cout << features[3] << std::endl;
 
-		// TODO: push the step into episode
-		struct state step = {before, after, best, best_reward};
-		// std::cout << step.before << std::endl;
-		// std::cout << step.reward << std::endl;
-		episode.push_back(step);
+		// push the step into episode
+		// 如果这一步有效（改变过best_vs的值）才放入episode里面
+		if(best_vs != MIN_FLOAT){
+			struct state step = {before, after, best, best_reward};
+			// std::cout << step.before << std::endl;
+			// std::cout << step.reward << std::endl;
+			episode.push_back(step);
+		}
 		return best;
 	}
 
@@ -259,11 +270,23 @@ private:
 		// 	print_index(indexs);
 
 		// std::cout << "flag: " << flag << std::endl;
-		int indexs[4][4] = {
-			{0, 4, 8, 12},
-			{1, 5, 9, 13},
+		int indexs[16][4] = {
 			{0, 1, 2, 3},
-			{4, 5, 6, 7}
+			{4, 5, 6, 7},
+			{3, 7, 11, 15},
+			{2, 6, 10, 14},
+			{15, 14, 13, 12},
+			{11, 10, 9, 8},
+			{12, 8, 4, 0},
+			{13, 9, 5, 1},
+			{3, 2, 1, 0},
+			{7, 6, 5, 4},
+			{15, 11, 7, 3},
+			{14, 10, 6, 2},
+			{12, 13, 14, 15},
+			{8, 9, 10, 11},
+			{0, 4, 8, 12},
+			{1, 5, 9, 13}
 		};
 		// int index1[4] = {0, 4, 8, 12};
 		// int index2[4] = {1, 5, 9, 13};
@@ -283,10 +306,11 @@ private:
 		// 	print_index(indexs);
 		// std::cout << std::endl;
 		
-		features.push_back(get_feature(before, indexs[0]));
-		features.push_back(get_feature(before, indexs[1]));
-		features.push_back(get_feature(before, indexs[2]));
-		features.push_back(get_feature(before, indexs[3]));
+		for(int i = 0; i < 16; i++){
+			features.push_back(get_feature(before, indexs[i]));
+		}
+		// features.push_back(get_feature(before, indexs[0]));
+		// features.push_back(get_feature(before, indexs[1]));
 		return features;
 	}
 	
@@ -302,7 +326,7 @@ private:
 	long long get_feature(const board& b, const int indexs[4]){
 		long long result = 0;
 		for(int i = 0; i < 4; i++){
-			result *= 32;
+			result *= MAX_INDEX;
 			int r = indexs[i] / 4;
 			int c = indexs[i] % 4;
 			result += b[r][c];
@@ -315,7 +339,7 @@ private:
 	 */
 	float lookup_value(const std::vector<long long> features){
 		float v_s = 0;
-		for(int i = 0; i < 4; i++){
+		for(int i = 0; i < 16; i++){
 			v_s += weights[i][features[i]];
 		}
 		return v_s;
@@ -326,50 +350,92 @@ private:
 	 */
 	float board_value(const board& b){
 		return lookup_value(get_features(b));
+		// float value = 0;
+		// for(int i = 0; i < 8; i++){
+		// 	board temp = b;
+		// 	for(int k = 0; k < i / 2; k++){
+		// 		temp.rotate_right();
+		// 	}
+
+		// 	if(i % 2 == 1){
+		// 		temp.reflect_horizontal();
+		// 	}
+		// 	std::vector<long long> features = get_features(temp);
+		// 	for(int j = 0; j < 2; j++){
+		// 		value += weights[j * 8 + i][features[j]];
+		// 	}
+		// }
+		// return value;
 	}
 
 	void train_weights(const board& b, const board& next_b, const int reward){
-		// 旋转对称加起来导致局面有八种变化
-		for(int i = 0; i < 1; i++){
-			board temp1 = b;
-			board temp2 = next_b;
-			for(int j = 0; j < i / 2; j++){
-				temp1.rotate_right();
-				temp2.rotate_right();
-			}
-
-			if(i % 2 == 1){
-				temp1.reflect_horizontal();
-				temp2.reflect_horizontal();
-			}
-
-			std::vector<long long> features = get_features(temp1);
-			std::vector<long long> next_features = get_features(temp2);
-			
-			for(int j = 0; j < 4; j++){
-				weights[j][features[j]] += alpha * (reward + lookup_value(next_features) - lookup_value(features));
-			}
+		std::vector<long long> features = get_features(b);
+		for(int i = 0; i < 16; i++){
+			weights[i][features[i]] += alpha * (reward + board_value(next_b) - lookup_value(features));
 		}
+		// // 旋转对称加起来导致局面有八种变化
+		// for(int i = 0; i < 8; i++){
+		// 	board temp1 = b;
+		// 	board temp2 = next_b;
+		// 	// std::cout << std::endl;
+		// 	// std::cout << std::endl;
+		// 	// std::cout << std::endl;
+		// 	// std::cout << "i: " << i << "\t" << "reward: " << reward << std::endl;
+
+		// 	for(int k = 0; k < i / 2; k++){
+		// 		temp1.rotate_right();
+		// 		temp2.rotate_right();
+		// 	}
+
+		// 	if(i % 2 == 1){
+		// 		temp1.reflect_horizontal();
+		// 		temp2.reflect_horizontal();
+		// 	}
+		// 	// std::cout << temp1;
+		// 	// std::cout << temp2;
+		// 	std::vector<long long> features = get_features(temp1);
+		// 	// std::vector<long long> next_features = get_features(temp2);
 			
+		// 	for(int j = 0; j < 2; j++){
+		// 		// std::cout << features[j] << std::endl;
+		// 		// std::cout << next_features[j] << std::endl;
+		// 		weights[j * 8 + i][features[j]] += alpha * (reward + board_value(temp2) - board_value(temp1));
+		// 	}
+		// }
 	}
 
 	void train_weights(const board& b){
-		// 旋转对称加起来导致局面有八种变化
-		for(int i = 0; i < 8; i++){
-			board temp = b;
-			for(int j = 0; j < i / 2; j++){
-				temp.rotate_right();
-			}
-
-			if(i % 2 == 1){
-				temp.reflect_horizontal();
-			}
-			std::vector<long long> features = get_features(temp);
-
-			for(int j = 0; j < 4; j++){
-				weights[j][features[j]] += alpha * (0.0 - lookup_value(features));
-			}
+		std::vector<long long> features = get_features(b);
+		for(int i = 0; i < 16; i++){
+			weights[i][features[i]] += alpha * (0.0 - lookup_value(features));
 		}
+
+		// // 旋转对称加起来导致局面有八种变化
+		// for(int i = 0; i < 8; i++){
+		// 	board temp = b;
+		// 	// std::cout << std::endl;
+		// 	// std::cout << std::endl;
+		// 	// std::cout << std::endl;
+		// 	// std::cout << "i: " << i << std::endl;
+		// 	// std::cout << temp;
+		// 	for(int k = 0; k < i / 2; k++){
+		// 		temp.rotate_right();
+		// 		// std::cout << "rotate_right" << std::endl;
+		// 		// std::cout << temp;
+		// 	}
+
+		// 	if(i % 2 == 1){
+		// 		temp.reflect_horizontal();
+		// 		// std::cout << "reflect_horizontal" << std::endl;
+		// 		// std::cout << temp;
+		// 	}
+		// 	std::vector<long long> features = get_features(temp);
+
+		// 	for(int j = 0; j < 2; j++){
+		// 		weights[j * 8 + i][features[j]] += alpha * (0.0 - board_value(temp));
+		// 	}
+		// }
+		// throw;
 	}
 
 	// std::vector<std::array<int, 4>> rotate_right(std::vector<std::array<int, 4>> indexs){

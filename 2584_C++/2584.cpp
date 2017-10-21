@@ -22,9 +22,11 @@
 #include "statistic.h"
 #include <cstdio>
 #include <cstring>
+#include<time.h>
 
 int main(int argc, const char* argv[]) {
-
+	clock_t startTime,endTime;
+	startTime = clock();
     // freopen("1.txt","w",stdout);
 
 	std::cout << "2584: ";	
@@ -153,5 +155,7 @@ int main(int argc, const char* argv[]) {
 		out.close();
 	}
 
+	endTime = clock();
+	std::cout << "Totle Time : " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
 	return 0;
 }

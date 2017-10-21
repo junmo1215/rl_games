@@ -21,7 +21,9 @@
  *
  */
 
-static const long long POSSIBLE_INDEX = 32;
+static const int POSSIBLE_INDEX = 32;
+
+static const int MAX_INDEX = 20;
 
 static const int fibonacci[POSSIBLE_INDEX]= {
 	0, 1, 2, 3, 5, 8, 13, 21,

@@ -136,7 +136,7 @@ public:
 	friend std::istream& operator >>(std::istream& in, statistic& stat) {
 		auto size = stat.data.size();
 		in.read(reinterpret_cast<char*>(&size), sizeof(size));
-		stat.total = stat.block = stat.limit = stat.count = size;
+		stat.block = stat.limit = stat.count = size;
 		stat.data.resize(size);
 		for (record& rec : stat.data) in >> rec;
 		return in;
