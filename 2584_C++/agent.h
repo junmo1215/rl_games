@@ -347,13 +347,28 @@ private:
 	// 	}
 	// }
 
+	/**
+	 * 根据局面和位置获取对应的feature
+	 * 
+	 * 由于最大index之前写的是24会造成weight里面存不下去
+	 * 并且出现的概率很小，所以添加合并index的步骤
+	 * 在提取feature的时候不区分21,22,23,24等（这里假设21是MAX_INDEX）
+	 * 这样做虽然最后达到的最大分数会稍微第一点，并且胜率也不会太高
+	 * 但是收敛速度会稍微快些，并且节省了很多内存
+	 */
 	long long get_feature(const board& b, const int indexs[TUPLE_LENGTH]){
 		long long result = 0;
 		for(int i = 0; i < TUPLE_LENGTH; i++){
 			result *= MAX_INDEX;
 			int r = indexs[i] / 4;
 			int c = indexs[i] % 4;
-			result += b[r][c];
+			// 目前我電腦12G內存沒辦法跑之前的代碼
+			if(b[r][c] >= MAX_INDEX){
+				result += MAX_INDEX;
+			}
+			else{
+				result += b[r][c];
+			}
 		}
 		return result;
 	}
