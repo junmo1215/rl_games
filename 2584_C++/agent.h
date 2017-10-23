@@ -17,7 +17,9 @@ public:
 			std::string key = pair.substr(0, pair.find('='));
 			std::string value = pair.substr(pair.find('=') + 1);
 			property[key] = { value };
+			std::cout << key << "\t" << value << std::endl;
 		}
+		std::cout << std::endl;
 	}
 	virtual ~agent() {}
 	virtual void open_episode(const std::string& flag = "") {}
@@ -82,12 +84,15 @@ public:
 		if (property.find("alpha") != property.end())
 			alpha = float(property["alpha"]);
 
-		if (property.find("load") != property.end())
+		if (property.find("load") != property.end()){
 			load_weights(property["load"]);
-		// initialize the n-tuple network
-		const long long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
-		for(int i = 0; i < TUPLE_NUM; i++){
-			weights.push_back(weight(feature_num));
+		}
+		else{
+			// initialize the n-tuple network
+			const long long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
+			for(int i = 0; i < TUPLE_NUM; i++){
+				weights.push_back(weight(feature_num));
+			}
 		}
 	}
 
