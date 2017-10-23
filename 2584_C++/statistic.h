@@ -80,9 +80,6 @@ public:
 		for (int t = 0, c = 0; c < block; c += stat[t++]) {
 			if (stat[t] == 0) continue;
 			int accu = std::accumulate(stat + t, stat + POSSIBLE_INDEX, 0);
-			// std::cout << "accu: " << accu << "\t" << "coef: " << coef << std::endl;
-			// std::cout << "aaa" << std::endl;
-			// std::cout << "c: " << c << "\t" << "t: " << t << "\t" << "stat[t]: " << stat[t] << std::endl;
 			std::cout << "\t" << fibonacci[t] << "\t" << (accu * coef) << "%";
 			std::cout << "\t(" << (stat[t] * coef) << "%)" << std::endl;
 		}
@@ -138,7 +135,7 @@ public:
 	friend std::istream& operator >>(std::istream& in, statistic& stat) {
 		auto size = stat.data.size();
 		in.read(reinterpret_cast<char*>(&size), sizeof(size));
-		stat.block = stat.limit = stat.count = size;
+		stat.count = size;
 		stat.data.resize(size);
 		for (record& rec : stat.data) in >> rec;
 		return in;

@@ -88,60 +88,18 @@ int main(int argc, const char* argv[]) {
 	long long i = 0;
 	while (!stat.is_finished()) {
 		i++;
-        // std::cout << i << std::endl;
 		play.open_episode("~:" + evil.name());
 		evil.open_episode(play.name() + ":~");
 
 		stat.open_episode(play.name() + ":" + evil.name());
 		board game = stat.make_empty_board();
-		
-        // std::cout << game << std::endl;
-        // action temp;
-        // // temp = std::move(action::place(2, 0));
-        // (action::place(2, 0)).apply(game);
-        // (action::place(12, 1)).apply(game);
-        // (action::place(8, 2)).apply(game);
-        // (action::place(3, 3)).apply(game);
-        // (action::place(2, 4)).apply(game);
-        // (action::place(5, 5)).apply(game);
-        // (action::place(5, 6)).apply(game);
-        // (action::place(5, 7)).apply(game);
 
-        // (action::place(14, 8)).apply(game);
-        // (action::place(11, 9)).apply(game);
-        // (action::place(3, 10)).apply(game);
-        // (action::place(2, 11)).apply(game);
-        // (action::place(3, 12)).apply(game);
-        // (action::place(9, 13)).apply(game);
-        // (action::place(1, 14)).apply(game);
-        // (action::place(2, 15)).apply(game);
-        
-        // std::cout << game << std::endl;
-        // // throw;
-        long long j = 0;
-        bool print = false;
         while (true) {
-            j++;
             agent& who = stat.take_turns(play, evil);
-            // agent& who = play;
-            action move = who.take_action(game, print);
-            // action move;
-            if(i == 177 && j >= 782 && j <= 790){
-                // move = who.take_action(game, true);
-                print = false;
-                // std::cout << game << std::endl;
-                // std::cout << move.name() << std::endl;
-            }
-            else{
-                print = false;
-                // move = who.take_action(game);
-            }
+            action move = who.take_action(game);
             if (move.apply(game) == -1) break;
             stat.save_action(move);
             if (who.check_for_win(game)) break;
-            // throw;
-            // std::cout << game;
-            // std::cin.ignore();
         }
         agent& win = stat.last_turns(play, evil);
         stat.close_episode(win.name());

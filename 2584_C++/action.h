@@ -17,9 +17,6 @@ public:
 			// 环境放置新的tile
 			// environment action (place a new tile)
 			b(opcode & 0x0f) = (opcode >> 4);
-			// std::cout << opcode << std::endl;
-			// std::cout << b << std::endl;
-			// throw;
 			return 0;
 		}
 		return -1;
