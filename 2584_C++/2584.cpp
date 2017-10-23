@@ -1,6 +1,6 @@
 /**
- * Basic Environment for Game 2048
- * use 'g++ -std=c++0x -O3 -g -o 2048 2048.cpp' to compile the source
+ * Basic Environment for Game 2584
+ * use 'g++ -std=c++0x -O3 -g -o 2584 2584.cpp' to compile the source
  *
  * Computer Games and Intelligence (CGI) Lab, NCTU, Taiwan
  * http://www.aigames.nctu.edu.tw
@@ -24,10 +24,21 @@
 #include <cstring>
 #include<time.h>
 
+void save_weights(const statistic stat, const std::string save){
+	if (save.size()) {
+		std::ofstream out;
+		out.open(save.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+		if (!out.is_open()) return;
+		out << stat;
+		out.flush();
+		out.close();
+	}
+}
+
 int main(int argc, const char* argv[]) {
 	clock_t startTime,endTime;
 	startTime = clock();
-    // freopen("1.txt","w",stdout);
+    //freopen("2.txt","w",stdout);
 
 	std::cout << "2584: ";	
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
@@ -138,22 +149,15 @@ int main(int argc, const char* argv[]) {
         play.close_episode(win.name());
         evil.close_episode(win.name());
 
-        // if(i % 1000 == 0)
-        //     stat.summary();
+        if(i % 1000 == 0)
+			save_weights(stat, save);
     }
 
 	if (summary) {
 		stat.summary();
 	}
 
-	if (save.size()) {
-		std::ofstream out;
-		out.open(save.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-		if (!out.is_open()) return -1;
-		out << stat;
-		out.flush();
-		out.close();
-	}
+	save_weights(stat, save);
 
 	endTime = clock();
 	std::cout << "Totle Time : " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;

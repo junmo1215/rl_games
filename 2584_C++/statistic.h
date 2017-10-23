@@ -26,25 +26,27 @@ public:
 
 public:
 	/**
-	 * show the statistic of last 'block' games
-	 *
-	 * the format would be
-	 * 1000   avg = 273901, max = 382324, ops = 241563
-	 *        512     100%   (0.3%)
-	 *        1024    99.7%  (0.2%)
-	 *        2048    99.5%  (1.1%)
-	 *        4096    98.4%  (4.7%)
-	 *        8192    93.7%  (22.4%)
-	 *        16384   71.3%  (71.3%)
-	 *
-	 * where (assume that block = 1000)
-	 *  '1000': current index (n)
-	 *  'avg = 273901': the average score of saved games is 273901
-	 *  'max = 382324': the maximum score of saved games is 382324
-	 *  'ops = 241563': the average speed of saved games is 241563
-	 *  '93.7%': 93.7% (937 games) reached 8192-tiles in saved games (a.k.a. win rate of 8192-tile)
-	 *  '22.4%': 22.4% (224 games) terminated with 8192-tiles (the largest) in saved games
-	 */
+	* show the statistic of last 'block' games
+	*
+	* the format would be
+	* 10000	avg = 46172, max = 137196, ops = 218817
+	*	233 	100%	(0.1%)
+	*	377 	99.9%	(0.2%)
+	*  	610 	99.7%	(1.5%)
+	*	987 	98.2%	(4.7%)
+	*	1597	93.5%	(32%)
+	*	2584	61.5%	(41.2%)
+	*	4181	20.3%	(17.7%)
+	*	6765	2.6%	(2.6%)
+	*
+	* where (assume that block = 1000)
+	*  '10000': current index (n)
+	*  'avg = 46172': the average score of saved games is 46172
+	*  'max = 137196': the maximum score of saved games is 137196
+	*  'ops = 218817': the average speed of saved games is 218817
+	*  '61.5%': 61.5% (615 games) reached 2584-tiles in saved games (a.k.a. win rate of 2584-tile)
+	*  '41.2%': 41.2% (412 games) terminated with 2584-tiles (the largest) in saved games
+	*/
 	void show() const {
 		int block = std::min(data.size(), this->block);
 		size_t sum = 0, max = 0, opc = 0, stat[POSSIBLE_INDEX] = { 0 };

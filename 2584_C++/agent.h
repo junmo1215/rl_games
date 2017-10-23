@@ -363,8 +363,8 @@ private:
 			int r = indexs[i] / 4;
 			int c = indexs[i] % 4;
 			// 目前我電腦12G內存沒辦法跑之前的代碼
-			if(b[r][c] >= MAX_INDEX){
-				result += MAX_INDEX;
+			if(b[r][c] >= (MAX_INDEX - 1)){
+				result += (MAX_INDEX - 1);
 			}
 			else{
 				result += b[r][c];
