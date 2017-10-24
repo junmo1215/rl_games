@@ -89,7 +89,7 @@ public:
 		}
 		else{
 			// initialize the n-tuple network
-			const long long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
+			const long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
 			for(int i = 0; i < TUPLE_NUM; i++){
 				weights.push_back(weight(feature_num));
 			}
@@ -108,13 +108,11 @@ public:
 
 	virtual void close_episode(const std::string& flag = "") {
 		// train the n-tuple network by TD(0)
-		board board_terminal = episode[episode.size() - 1].after;
-		train_weights(board_terminal);
+		train_weights(episode[episode.size() - 1].after);
 		for(int i = episode.size() - 2; i >= 0; i--){
-			state step = episode[i];
 			state step_next = episode[i + 1];
 
-			train_weights(step.after, step_next.after, step_next.reward);
+			train_weights(episode[i].after, step_next.after, step_next.reward);
 		}
 	}
 
@@ -126,7 +124,7 @@ public:
 		int best_reward = 0;
 
 		// 模拟四种动作，取实验后盘面最好的动作作为best
-		for(int op: {0, 1, 2, 3}){
+		for(int op: {3, 2, 1, 0}){
 			board b = before;
 			int reward = b.move(op);
 			if(reward != -1){
@@ -144,7 +142,7 @@ public:
 		// push the step into episode
 		// 如果这一步有效（改变过best_vs的值）才放入episode里面
 		if(best_vs != MIN_FLOAT){
-			struct state step = {after, best, best_reward};
+			struct state step = {after, best_reward};
 			episode.push_back(step);
 		}
 		return best;
@@ -175,7 +173,7 @@ public:
 		out.close();
 	}
 
-	const static int indexs[TUPLE_NUM][TUPLE_LENGTH];	
+	const static std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> indexs;
 
 private:
 	std::vector<weight> weights;
@@ -183,7 +181,6 @@ private:
 	struct state {
 		// select the necessary components of a state
 		board after;
-		action move;
 		int reward;
 	};
 
@@ -195,116 +192,104 @@ private:
 
 private:
 	/**
-	 * 根据当前局面提取特征
-	 */
-	std::vector<long long> get_features(const board& before){
-		std::vector<long long> features;
-		
-		for(int i = 0; i < TUPLE_NUM; i++){
-			auto temp = get_feature(before, indexs[i]);
-			features.push_back(temp);
-		}
-		return features;
-	}
-
-	/**
 	 * 根据局面和位置获取对应的feature
 	 * 
 	 * 由于最大index之前写的是24会造成weight里面存不下去
 	 * 并且出现的概率很小，所以添加合并index的步骤
-	 * 在提取feature的时候不区分21,22,23,24等（这里假设21是MAX_INDEX）
-	 * 这样做虽然最后达到的最大分数会稍微第一点，并且胜率也不会太高
+	 * 在提取feature的时候不区分20,21,22,23,24等（这里假设21是MAX_INDEX）
+	 * 这样做虽然最后达到的最大分数会稍微低一点，并且胜率也不会太高
 	 * 但是收敛速度会稍微快些，并且节省了很多内存
 	 */
-	long long get_feature(const board& b, const int indexs[TUPLE_LENGTH]){
-		long long result = 0;
-		for(int i = 0; i < TUPLE_LENGTH; i++){
+	long get_feature(const board& b, const std::array<int, TUPLE_LENGTH> index){
+		long result = 0;
+		int tile;
+		for(int i : index){
 			result *= MAX_INDEX;
-			int r = indexs[i] / 4;
-			int c = indexs[i] % 4;
+			// 通过获取地址的方式拿到索引比之前的做法要稍微快一点
+			// 下面几种写法结果相同，只有速度上有些差异
+			// tile = b[i / 4][i % 4];
+			// tile = b[i >> 2][i & 0b11];
+			tile = *(&(b[0][0]) + i);
 			// 目前我電腦12G內存沒辦法跑之前的代碼
-			if(b[r][c] >= (MAX_INDEX - 1)){
+			if(tile >= (MAX_INDEX - 1)){
 				result += (MAX_INDEX - 1);
 			}
 			else{
-				result += b[r][c];
+				result += tile;
 			}
 		}
 		return result;
 	}
 
 	/**
-	 * 根据局面解析出来的feature获取当前的状态动作值
-	 */
-	float lookup_value(const std::vector<long long> features){
-		float v_s = 0;
-		for(int i = 0; i < TUPLE_NUM; i++){
-			v_s += weights[i][features[i]];
-		}
-		return v_s;
-	}
-
-	/**
 	 * 获取盘面的估值
 	 */
 	float board_value(const board& b){
-		return lookup_value(get_features(b));
+		float result = 0;
+		for(int i = 0; i < TUPLE_NUM; i++){
+			result += weights[i][get_feature(b, indexs[i])];
+		}
+		return result;
 	}
 
 	void train_weights(const board& b, const board& next_b, const int reward){
-		std::vector<long long> features = get_features(b);
+		// 这个写法比之前的速度快，并且逻辑上更加说得通一点
+		// 在更新weight的同时不应该由于前面几次循环中调整了weight而修改board value
+		float delta = alpha * (reward + board_value(next_b) - board_value(b));
 		for(int i = 0; i < TUPLE_NUM; i++){
-			weights[i][features[i]] += alpha * (reward + board_value(next_b) - lookup_value(features));
+			weights[i][get_feature(b, indexs[i])] += delta;
 		}
 	}
 
 	void train_weights(const board& b){
-		std::vector<long long> features = get_features(b);
+		float delta = - alpha * board_value(b);
 		for(int i = 0; i < TUPLE_NUM; i++){
-			weights[i][features[i]] += alpha * (0.0 - lookup_value(features));
+			weights[i][get_feature(b, indexs[i])] += delta;
 		}
 	}
 };
 
-const int player::indexs[TUPLE_NUM][TUPLE_LENGTH] = {
-	{0, 4, 8, 9, 12, 13},
-	{1, 5, 9, 10, 13, 14},
-	{1, 2, 5, 6, 9, 10},
-	{2, 3, 6, 7, 10, 11},
+// N-tuple中feature的索引，其中前面四行是基础的索引（两个斧头形状两个2 * 3的box）
+// 前面四组是由第一组旋转得到的新的索引，后面四组是前面四组对称得到的
+const std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> player::indexs = {{
+	{{0, 4, 8, 9, 12, 13}},
+	{{1, 5, 9, 10, 13, 14}},
+	{{1, 2, 5, 6, 9, 10}},
+	{{2, 3, 6, 7, 10, 11}},
 	
-	{3, 2, 1, 5, 0, 4},
-	{7, 6, 5, 9, 4, 8},
-	{7, 11, 6, 10, 5, 9},
-	{11, 15, 10, 14, 9, 13},
+	{{3, 2, 1, 5, 0, 4}},
+	{{7, 6, 5, 9, 4, 8}},
+	{{7, 11, 6, 10, 5, 9}},
+	{{11, 15, 10, 14, 9, 13}},
 
-	{15, 11, 7, 6, 3, 2},
-	{14, 10, 6, 5, 2, 1},
-	{14, 13, 10, 9, 6, 5},
-	{13, 12, 9, 8, 5, 4},
+	{{15, 11, 7, 6, 3, 2}},
+	{{14, 10, 6, 5, 2, 1}},
+	{{14, 13, 10, 9, 6, 5}},
+	{{13, 12, 9, 8, 5, 4}},
 
-	{12, 13, 14, 10, 15, 11},
-	{8, 9, 10, 6, 11, 7},
-	{8, 4, 9, 5, 10, 6},
-	{4, 0, 5, 1, 6, 2},
+	{{12, 13, 14, 10, 15, 11}},
+	{{8, 9, 10, 6, 11, 7}},
+	{{8, 4, 9, 5, 10, 6}},
+	{{4, 0, 5, 1, 6, 2}},
 
 
-	{3, 7, 11, 10, 15, 14},
-	{2, 6, 10, 9, 14, 13},
-	{2, 1, 6, 5, 10, 9},
-	{1, 0, 5, 4, 9, 8},
+	{{3, 7, 11, 10, 15, 14}},
+	{{2, 6, 10, 9, 14, 13}},
+	{{2, 1, 6, 5, 10, 9}},
+	{{1, 0, 5, 4, 9, 8}},
 
-	{0, 1, 2, 6, 3, 7},
-	{4, 5, 6, 10, 7, 11},
-	{4, 8, 5, 9, 6, 10},
-	{8, 12, 9, 13, 10, 14},
+	{{0, 1, 2, 6, 3, 7}},
+	{{4, 5, 6, 10, 7, 11}},
+	{{4, 8, 5, 9, 6, 10}},
+	{{8, 12, 9, 13, 10, 14}},
 
-	{12, 8, 4, 5, 0, 1},
-	{13, 9, 5, 6, 1, 2},
-	{13, 14, 9, 10, 5, 6},
-	{14, 15, 10, 11, 6, 7},
+	{{12, 8, 4, 5, 0, 1}},
+	{{13, 9, 5, 6, 1, 2}},
+	{{13, 14, 9, 10, 5, 6}},
+	{{14, 15, 10, 11, 6, 7}},
 
-	{15, 14, 13, 9, 12, 8},
-	{11, 10, 9, 5, 8, 4},
-	{11, 7, 10, 6, 9, 5},
-	{7, 3, 6, 2, 5, 1}
-};
+	{{15, 14, 13, 9, 12, 8}},
+	{{11, 10, 9, 5, 8, 4}},
+	{{11, 7, 10, 6, 9, 5}},
+	{{7, 3, 6, 2, 5, 1}}
+}};
