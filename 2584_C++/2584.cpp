@@ -24,7 +24,10 @@
 #include <cstring>
 #include<time.h>
 
-void save_weights(const statistic stat, const std::string save){
+/**
+* 这里只记录了最近1000局(limit)的盘面信息以及统计结果，没有保存weight
+*/
+void save_statistic(const statistic stat, const std::string save){
 	if (save.size()) {
 		std::ofstream out;
 		out.open(save.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -107,15 +110,26 @@ int main(int argc, const char* argv[]) {
         play.close_episode(win.name());
         evil.close_episode(win.name());
 
-        if(i % 1000 == 0)
-			save_weights(stat, save);
+		// 每10000局保存一次统计信息
+        if(i % 10000 == 0)
+			save_statistic(stat, save);
+		
+		// 每200000局改变一次learning rate
+		if(i % 200000 == 0)
+			play.change_learning_rate();
+
+		// 每50000局保存一次weights
+		if(i % 50000 == 0){
+			play.save_weights();
+		}
+			
     }
 
 	if (summary) {
 		stat.summary();
 	}
 
-	save_weights(stat, save);
+	save_statistic(stat, save);
 
 	endTime = clock();
 	std::cout << "Totle Time : " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;

@@ -97,8 +97,7 @@ public:
 	}
 
 	~player() {
-		if (property.find("save") != property.end())
-			save_weights(property["save"]);
+		save_weights();
 	}
 
 	virtual void open_episode(const std::string& flag = "") {
@@ -150,6 +149,7 @@ public:
 
 public:
 	virtual void load_weights(const std::string& path) {
+		std::cout << "loading weights... " << std::endl;
 		std::ifstream in;
 		in.open(path.c_str(), std::ios::in | std::ios::binary);
 		if (!in.is_open()) std::exit(-1);
@@ -162,15 +162,29 @@ public:
 	}
 
 	virtual void save_weights(const std::string& path) {
+		std::cout << "saving weights to " << path.c_str() << std::endl;
 		std::ofstream out;
 		out.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!out.is_open()) std::exit(-1);
 		size_t size = weights.size();
 		out.write(reinterpret_cast<char*>(&size), sizeof(size));
-		for (weight& w : weights)
+		for (weight& w : weights){
 			out << w;
+		}
 		out.flush();
 		out.close();
+		std::cout << "save weights success " << std::endl;
+	}
+
+	virtual void save_weights(){
+		if (property.find("save") != property.end())
+			save_weights(property["save"]);
+	}
+
+	virtual void change_learning_rate(){
+		std::cout << "learning rate: " << alpha;
+		alpha /= 2;
+		std::cout << " change to : " << alpha << std::endl;
 	}
 
 	const static std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> indexs;
