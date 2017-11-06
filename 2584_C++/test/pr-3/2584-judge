@@ -1,0 +1,41 @@
+#!/bin/bash
+echo "2584-Demo: "$0 $@
+echo
+
+sample_input=sample-input.txt
+sample_output=sample-output.txt
+#output=output.txt
+#solver=./2584sol
+for opt in "$@"
+do
+	echo "$opt" | grep -q "\--sample-input" && sample_input=${opt:15}
+	echo "$opt" | grep -q "\--sample-output" && sample_output=${opt:16}
+	echo "$opt" | grep -q "\--judge-output" && output=${opt:15}
+	echo "$opt" | grep -q "\--judge-solver" && solver=${opt:15}
+done
+
+echo "sample input:  "$sample_input
+echo "sample output: "$sample_output
+[ -e "$sample_input" ] || exit 1
+[ -e "$sample_output" ] || exit 1
+
+if [ "$solver" ]
+then
+	echo "pending:       "$solver
+	output=2584-judge-$(date +%Y-%m-%d-%H-%M-%S).txt
+	echo -n "time usage:    "
+	{ time eval $solver < $sample_input > $output; } 2>&1 | grep real | cut -f 2
+else
+	[ -e "$output" ] || exit 1
+	echo "pending:       "$output
+fi
+
+echo
+total=$(pr -m -t $sample_input <(grep -E "^=.+$" $sample_output) <(grep -E "^=.+$" $output) | wc -l)
+point=$(pr -m -t $sample_input <(grep -E "^=.+$" $sample_output) <(grep -E "^=.+$" $output) | awk '{ 
+	x = $9 - $11;
+	x = x >= 0 ? x : -x;
+	if (x < 0.001) print x;
+	else           printf "mismatch: %s %s %s %s %s %s %s = %s (%s)\n",$1,$2,$3,$4,$5,$6,$7,$9,$11 > "/dev/stderr";
+}' | wc -l)
+echo score = $point/$total points
