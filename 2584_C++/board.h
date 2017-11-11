@@ -172,7 +172,7 @@ public:
 		out << "+------------------------+" << std::endl;
 		for (int r = 0; r < 4; r++) {
 			std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-				(fibonacci[b[r][0]]), // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
+				(fibonacci[b[r][0]]),
 				(fibonacci[b[r][1]]),
 				(fibonacci[b[r][2]]),
 				(fibonacci[b[r][3]]));

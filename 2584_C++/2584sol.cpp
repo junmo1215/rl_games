@@ -1,6 +1,6 @@
 /**
- * Basic Environment for Game 2048
- * use 'g++ -std=c++0x -O3 -g -Wall -fmessage-length=0 -o 2048sol 2048sol.cpp' to compile the source
+ * Basic Environment for Game 2584
+ * use 'g++ -std=c++0x -O3 -g -Wall -fmessage-length=0 -o 2584sol 2584sol.cpp' to compile the source
  *
  * Computer Games and Intelligence (CGI) Lab, NCTU, Taiwan
  * http://www.aigames.nctu.edu.tw
@@ -18,13 +18,13 @@
 #include <cmath>
 #include <chrono>
 
-#include "action2x3.h"
+#include "action.h"
 #include "board2x3.h"
 #include "type.h"
 #include "solver.h"
 
 int main(int argc, const char* argv[]) {
-	std::cout << "2048-Solver: ";
+	std::cout << "2584-Solver: ";
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
 	std::cout << std::endl << std::endl;
 

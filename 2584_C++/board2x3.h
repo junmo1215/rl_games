@@ -6,7 +6,7 @@
 #include <cmath>
 
 /**
- * array-based board for 2x3 2048
+ * array-based board for 2x3 2584
  *
  * index (2-d form):
  * [0][0] [0][1] [0][2]
@@ -18,6 +18,10 @@
  *
  */
 class board2x3 {
+
+public:
+	static const int ROW = 2;
+	static const int COLUMN = 3;
 
 public:
 	board2x3() : tile() {}
@@ -114,11 +118,11 @@ public:
     friend std::ostream& operator <<(std::ostream& out, const board2x3& b) {
 		char buff[32];
 		out << "+------------------+" << std::endl;
-		for (int r = 0; r < 2; r++) {
+		for (int r = 0; r < ROW; r++) {
 			std::snprintf(buff, sizeof(buff), "|%6u%6u%6u|",
-				(1 << b[r][0]) & -2u, // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
-				(1 << b[r][1]) & -2u,
-				(1 << b[r][2]) & -2u);
+				(fibonacci[b[r][0]]),
+				(fibonacci[b[r][1]]),
+				(fibonacci[b[r][2]]));
 			out << buff << std::endl;
 		}
 		out << "+------------------+" << std::endl;
@@ -150,5 +154,5 @@ public:
     }
 
 private:
-    std::array<std::array<int, 3>, 2> tile;
+    std::array<std::array<int, COLUMN>, ROW> tile;
 };

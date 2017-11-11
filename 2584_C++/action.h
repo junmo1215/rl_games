@@ -1,12 +1,36 @@
 #pragma once
 #include <string>
 #include "board.h"
+#include "board2x3.h"
 
 class action {
 public:
 	action(const action& act) : opcode(act) {}
 	action(const int& op = -1) : opcode(op) {}
 	operator int() const { return opcode; }
+
+public:
+	action& operator =(const action& a) { opcode = a; return *this; }
+	bool operator ==(const action& a) const { return opcode == int(a); }
+	bool operator < (const action& a) const { return opcode <  int(a); }
+	bool operator !=(const action& a) const { return !(*this == a); }
+	bool operator > (const action& a) const { return a < *this; }
+	bool operator <=(const action& a) const { return !(a < *this); }
+	bool operator >=(const action& a) const { return !(*this < a); }
+
+public:
+
+	int apply(board2x3& b) const {
+		if ((0b11 & opcode) == (opcode)) {
+			// player action (slide up, right, down, left)
+			return b.move(opcode);
+		} else if (b(opcode & 0x0f) == 0) {
+			// environment action (place a new tile)
+			b(opcode & 0x0f) = (opcode >> 4);
+			return 0;
+		}
+		return -1;
+	}
 
 	int apply(board& b) const {
 		if ((0b11 & opcode) == (opcode)) {
@@ -42,5 +66,5 @@ public:
 	}
 
 private:
-	const int opcode;
+	int opcode;
 };
