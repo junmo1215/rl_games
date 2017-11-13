@@ -17,11 +17,13 @@
  *  (3)  (4)  (5)
  *
  */
+
 class board2x3 {
 
 public:
 	static const int ROW = 2;
 	static const int COLUMN = 3;
+	static const int POSSIBLE_INDEX;
 
 public:
 	board2x3() : tile() {}
@@ -156,3 +158,5 @@ public:
 private:
     std::array<std::array<int, COLUMN>, ROW> tile;
 };
+
+const int board2x3::POSSIBLE_INDEX = 14;
