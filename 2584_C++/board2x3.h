@@ -59,12 +59,17 @@ public:
 	}
 
 private:
+	bool can_combine(int& left, int& right){
+		// 合并规则是两个值在数列中相邻或者同时为1的时候可以合并
+		return (left != 0 && right != 0) && ((left == 1 && right == 1) || abs(left - right) == 1);
+	}
+
 	int move_left(int& left, int& right) {
 		if (left) {
-			if (left == right) {
+			if (can_combine(left, right)) {
 				left += 1;
 				right = 0;
-				return 1 << left;
+				return fibonacci[left];
 			}
 		} else {
 			left = right;
