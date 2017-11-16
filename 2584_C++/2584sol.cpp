@@ -24,6 +24,8 @@
 #include "solver.h"
 
 int main(int argc, const char* argv[]) {
+	// freopen("1.txt","w",stdout);
+
 	std::cout << "2584-Solver: ";
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
 	std::cout << std::endl << std::endl;

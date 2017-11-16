@@ -67,6 +67,7 @@ private:
 	int move_left(int& left, int& right) {
 		if (left) {
 			if (can_combine(left, right)) {
+				left = (left > right ? left : right);
 				left += 1;
 				right = 0;
 				return fibonacci[left];
@@ -127,9 +128,12 @@ public:
 		out << "+------------------+" << std::endl;
 		for (int r = 0; r < ROW; r++) {
 			std::snprintf(buff, sizeof(buff), "|%6u%6u%6u|",
-				(fibonacci[b[r][0]]),
-				(fibonacci[b[r][1]]),
-				(fibonacci[b[r][2]]));
+				// (fibonacci[b[r][0]]),
+				// (fibonacci[b[r][1]]),
+				// (fibonacci[b[r][2]]));
+				b[r][0],
+				b[r][1],
+				b[r][2]);
 			out << buff << std::endl;
 		}
 		out << "+------------------+" << std::endl;
@@ -164,4 +168,4 @@ private:
     std::array<std::array<int, COLUMN>, ROW> tile;
 };
 
-const int board2x3::POSSIBLE_INDEX = 14;
+const int board2x3::POSSIBLE_INDEX = 13;

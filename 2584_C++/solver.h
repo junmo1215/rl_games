@@ -6,6 +6,12 @@
 #include "type.h"
 #include "action.h"
 
+static const int max_index = board2x3::POSSIBLE_INDEX;
+static const int row = board2x3::ROW;
+static const int column = board2x3::COLUMN;
+static const int max_pos = row * column;
+static const long SIZE = max_index * max_index * max_index * max_index * max_index * max_index;
+
 class solver {
 public:
 	typedef float value_t;
@@ -26,11 +32,13 @@ public:
 		// int best_move[SIZE];
 		// float expect[SIZE];
 
-		for(long long i = 0; i < SIZE; i++){
-			moves[i] = -1;
+		expects = new float[SIZE];
+		for(long i = 0; i < SIZE; i++){
+			// moves[i] = -1;
 			expects[i] = -1.0;
 		}
 
+		// std::cout << "expects values inited" << std::endl;
 		// int i = 0;
 
 		for(int pos1 = 0; pos1 < max_pos; pos1++){
@@ -50,6 +58,7 @@ public:
 						board2x3 board;
 						action::place(tile1, pos1).apply(board);
 						action::place(tile2, pos2).apply(board);
+						
 						// std::cout << board << std::endl;
 						get_expect(board);
 					}
@@ -57,6 +66,19 @@ public:
 			}
 		}
 
+		// test
+		// board2x3 board;
+		// action::place(6, 0).apply(board);
+		// action::place(2, 1).apply(board);
+		// action::place(1, 2).apply(board);
+		// action::place(8, 3).apply(board);
+		// action::place(10, 4).apply(board);
+		// action::place(12, 5).apply(board);
+
+		// //std::cout << SIZE << std::endl;
+		// //std::cout << expects[3451066] << std::endl;
+		// get_expect(board);
+		
 		// std::cout << i << std::endl;
 
 		// printf(
@@ -85,19 +107,39 @@ public:
 
 	answer solve2x3(const board2x3& state, state_type type = state_type::before) {
 		std::cout << state << std::endl;
+
+		int sum = 0;
+		int temp_tile;
+		for(int i = 0; i < row; i++){
+			for(int j = 0; j < column; j++){
+				temp_tile = state[i][j];
+				// 排除盘面上不可能出现的数字
+				if(temp_tile >= max_index || temp_tile < 0)
+					return -1;
+				sum += temp_tile;
+			}
+		}
+		// 排除盘面上只有一个1或全部为空的情况
+		if(sum <= 1)
+			return -1;
+
 		// TODO: find the answer in the lookup table and return it
+		if(type.is_before() && is_legal_before_state(state)){
+			std::cout << "is_before" << std::endl;
+			// std::cout << state << std::endl;
+			return get_expect(state);
+		}
+		else if(type.is_after() && is_legal_after_state(state)){
+			std::cout << "is_after" << std::endl;
+			// std::cout << state << std::endl;
+			return get_after_expect(state);
+		}
 		return -1;
 	}
 
 private:
-
-	int max_index = board2x3::POSSIBLE_INDEX;
-	int row = board2x3::ROW;
-	int column = board2x3::COLUMN;
-	int max_pos = row * column;
-	const long SIZE = max_index * max_index * max_index * max_index * max_index * max_index;
-	int *moves = new int[SIZE];
-	float *expects = new float[SIZE];
+	// int *moves = new int[SIZE];
+	float *expects;
 
 	// TODO: place your transposition table here
 
@@ -113,15 +155,18 @@ private:
 			}
 		}
 
+		// std::cout << index << std::endl;
+		// std::cout << board << std::endl;
 		if(expects[index] > -1)
 			return expects[index];
 
+		// std::cout << index << "\t" << expects[index] << std::endl;
 		// std::cout << board << std::endl << index << std::endl;
 		// std::cin.ignore();
 
 		float expect = 0.0;
 		float best_expect = MIN_FLOAT;
-		int best_move = 0;
+		// int best_move = 0;
 		bool is_moved = false;
 
 		// 模拟四种动作
@@ -131,45 +176,96 @@ private:
 			// std::cout << "op: " << op << std::endl;
 			// std::cout << "reward: " << reward << std::endl;
 			// std::cout << b;
+			// std::cin.ignore();
 			if(reward != -1){
 				expect = get_after_expect(b) + reward;
 				if(expect > best_expect){
 					is_moved = true;
 					best_expect = expect;
-					best_move = op;
+					// best_move = op;
 				}
 			}
 		}
 
 		if(is_moved){
 			expects[index] = best_expect;
-			moves[index] = best_move;
+			// moves[index] = best_move;
 		}
 		else{
 			expects[index] = 0;
 		}
+
 		return expects[index];
 	}
 
 	float get_after_expect(board2x3 board){
 		// std::cout << board << std::endl;
-		float expect = 0.0;
-		float best_expect = MIN_FLOAT;
-		
-		for(int i = 0; i < max_pos; i++){
-			for(int j = 1; j < 3; j++){
+		// float expect = 0.0;
+		// float best_expect = 0 - MIN_FLOAT;
+		//int count[2] = {0, 0};
+
+		// for(int i = 0; i < max_pos; i++){
+		// 	for(int j: {1, 2}){
+		// 		board2x3 b = board;
+		// 		int result = action::place(j, i).apply(b);
+		// 		if(result != -1){
+		// 			count[j - 1] += 1;
+		// 			// std::cout << b << std::endl;
+		// 			expect += get_expect(b);
+		// 			// if(expect < best_expect){
+		// 			// 	best_expect = expect;
+		// 			// }
+		// 		}
+		// 	}
+		// }
+
+		float temp_expects[2] = {0, 0};
+		for(int i: {1, 2}){
+			float expect = 0;
+			int count = 0;
+			for(int j = 0; j < max_pos; j++){
 				board2x3 b = board;
-				int result = action::place(j, i).apply(b);
+				int result = action::place(i, j).apply(b);
 				if(result != -1){
-					// std::cout << b << std::endl;
-					expect = 0 - get_expect(b);
-					if(expect > best_expect){
-						best_expect = expect;
-					}
+					expect += get_expect(b);
+					count++;
 				}
 			}
+			temp_expects[i - 1] = expect / count;
 		}
-		return best_expect;
+
+		return temp_expects[0] * 0.9 + temp_expects[1] * 0.1;
 	}
 
+	bool is_legal_after_state(board2x3 board){
+		// 玩家移动后盘面上必然会出现空位
+		int empty_count = 0;
+		int temp_tile;
+		for(int i = 0; i < row; i++){
+			for(int j = 0; j < column; j++){
+				temp_tile = board[i][j];
+				if(temp_tile == 0)
+					empty_count++;
+			}
+		}
+		if(empty_count == 0)
+			return false;
+		return true;
+	}
+
+	bool is_legal_before_state(board2x3 board){
+		// 玩家移动前，盘面上必然会有1或者2
+		int drop_tile_count = 0;
+		int temp_tile;
+		for(int i = 0; i < row; i++){
+			for(int j = 0; j < column; j++){
+				temp_tile = board[i][j];
+				if(temp_tile == 1 or temp_tile == 2)
+					drop_tile_count++;
+			}
+		}
+		if(drop_tile_count == 0)
+			return false;
+		return true;
+	}
 };
