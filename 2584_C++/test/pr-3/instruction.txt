@@ -3,7 +3,7 @@ $ chmod +x 2584-judge
 $ chmod +x 2584-speed
 
 To generate the output of specific input
-$ ./solver < sample-input.txt > output.txt
+$ ./2584sol < sample-input.txt > output.txt
 
 To judge an output file
 $ ./2584-judge --judge-output=output.txt
@@ -12,7 +12,7 @@ To judge an output file with specific sample input and output
 $ ./2584-judge --judge-output=output.txt --sample-input=sample-input.txt --sample-output=sample-output.txt
 
 To judge a solver
-$ ./2584-judge --judge-solver=./solver
+$ ./2584-judge --judge-solver=./2584sol
 
 To judge a solver with some arguments
-$ ./2584-judge --judge-solver="./solver --some-arguments"
+$ ./2584-judge --judge-solver="./2584sol --some-arguments"

@@ -106,9 +106,9 @@ public:
 	}
 
 	answer solve2x3(const board2x3& state, state_type type = state_type::before) {
-		std::cout << state << std::endl;
+		// std::cout << state << std::endl;
 
-		int sum = 0;
+		// int sum = 0;
 		int temp_tile;
 		for(int i = 0; i < row; i++){
 			for(int j = 0; j < column; j++){
@@ -116,21 +116,21 @@ public:
 				// 排除盘面上不可能出现的数字
 				if(temp_tile >= max_index || temp_tile < 0)
 					return -1;
-				sum += temp_tile;
+				// sum += temp_tile;
 			}
 		}
-		// 排除盘面上只有一个1或全部为空的情况
-		if(sum <= 1)
-			return -1;
+		// // 排除盘面上只有一个1或全部为空的情况
+		// if(sum <= 1)
+		// 	return -1;
 
 		// TODO: find the answer in the lookup table and return it
 		if(type.is_before() && is_legal_before_state(state)){
-			std::cout << "is_before" << std::endl;
+			// std::cout << "is_before" << std::endl;
 			// std::cout << state << std::endl;
 			return get_expect(state);
 		}
 		else if(type.is_after() && is_legal_after_state(state)){
-			std::cout << "is_after" << std::endl;
+			// std::cout << "is_after" << std::endl;
 			// std::cout << state << std::endl;
 			return get_after_expect(state);
 		}
@@ -147,13 +147,13 @@ private:
 
 	float get_expect(board2x3 board){
 		// std::cout << board << std::endl;
-		int index = 0;
-		for(int i = 0; i < row; i++){
-			for(int j = 0; j < column; j++){
-				index *= max_index;
-				index += board[i][j];
-			}
-		}
+		int index = get_index(board);
+		// for(int i = 0; i < row; i++){
+		// 	for(int j = 0; j < column; j++){
+		// 		index *= max_index;
+		// 		index += board[i][j];
+		// 	}
+		// }
 
 		// std::cout << index << std::endl;
 		// std::cout << board << std::endl;
@@ -238,34 +238,83 @@ private:
 	}
 
 	bool is_legal_after_state(board2x3 board){
+
+		// int temp_tile;
+		// for(int i = 0; i < row; i++){
+		// 	for(int j = 0; j < column; j++){
+		// 		temp_tile = board[i][j];
+		// 		if
+		// 	}
+		// }
+
+
+
 		// 玩家移动后盘面上必然会出现空位
+		// 空位太多的某些情况也不可能出现
+		// 这时候随便放一个tile一定是before state
+		// 用上面两个逻辑排除了除了初始条件之外的各种情况
 		int empty_count = 0;
+		int one_count = 0;
 		int temp_tile;
 		for(int i = 0; i < row; i++){
 			for(int j = 0; j < column; j++){
 				temp_tile = board[i][j];
-				if(temp_tile == 0)
+				if(temp_tile == 0){
+					if(empty_count == 0){
+						board2x3 b = board;
+						action::place(1, i * 3 + j).apply(b);
+						if(is_legal_before_state(b) == false)
+							return false;
+					}
 					empty_count++;
+				}
+				else if(temp_tile == 1){
+					one_count++;
+				}
+					
 			}
 		}
 		if(empty_count == 0)
 			return false;
+
+		// 不可能在移动之后盘面上只有一个1
+		if(empty_count == 5 && one_count == 1)
+			return false;
+
+		// 考虑类似 1 0 0 0 0 1这样的情况
+		
+
 		return true;
 	}
 
 	bool is_legal_before_state(board2x3 board){
-		// 玩家移动前，盘面上必然会有1或者2
-		int drop_tile_count = 0;
-		int temp_tile;
+		// // 玩家移动前，盘面上必然会有1或者2
+		// int drop_tile_count = 0;
+		// int temp_tile;
+		// for(int i = 0; i < row; i++){
+		// 	for(int j = 0; j < column; j++){
+		// 		temp_tile = board[i][j];
+		// 		if(temp_tile == 1 or temp_tile == 2)
+		// 			drop_tile_count++;
+		// 	}
+		// }
+		// if(drop_tile_count == 0)
+		// 	return false;
+		// return true;
+
+		int index = get_index(board);
+		return expects[index] != -1;
+
+	}
+
+	int get_index(board2x3 board){
+		int index = 0;
 		for(int i = 0; i < row; i++){
 			for(int j = 0; j < column; j++){
-				temp_tile = board[i][j];
-				if(temp_tile == 1 or temp_tile == 2)
-					drop_tile_count++;
+				index *= max_index;
+				index += board[i][j];
 			}
 		}
-		if(drop_tile_count == 0)
-			return false;
-		return true;
+		return index;
 	}
 };

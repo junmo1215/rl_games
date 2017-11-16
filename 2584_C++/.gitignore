@@ -4,3 +4,5 @@
 .fuse_hidden*
 2584sol
 2584sol.exe
+test/pr-3/2584-judge-*.txt
+test/pr-3/output.txt
