@@ -33,9 +33,11 @@ public:
 		// float expect[SIZE];
 
 		expects = new float[SIZE];
+		after_expects = new float[SIZE];
 		for(long i = 0; i < SIZE; i++){
 			// moves[i] = -1;
 			expects[i] = -1.0;
+			after_expects[i] = -1.0;
 		}
 
 		// std::cout << "expects values inited" << std::endl;
@@ -140,6 +142,7 @@ public:
 private:
 	// int *moves = new int[SIZE];
 	float *expects;
+	float *after_expects;
 
 	// TODO: place your transposition table here
 
@@ -234,11 +237,16 @@ private:
 			temp_expects[i - 1] = expect / count;
 		}
 
-		return temp_expects[0] * 0.9 + temp_expects[1] * 0.1;
+		float result = temp_expects[0] * 0.9 + temp_expects[1] * 0.1;
+		after_expects[get_index(board)] = result;
+
+		return result;
 	}
 
 	bool is_legal_after_state(board2x3 board){
 
+		int index = get_index(board);
+		return after_expects[index] != -1;
 		// int temp_tile;
 		// for(int i = 0; i < row; i++){
 		// 	for(int j = 0; j < column; j++){
@@ -253,38 +261,38 @@ private:
 		// 空位太多的某些情况也不可能出现
 		// 这时候随便放一个tile一定是before state
 		// 用上面两个逻辑排除了除了初始条件之外的各种情况
-		int empty_count = 0;
-		int one_count = 0;
-		int temp_tile;
-		for(int i = 0; i < row; i++){
-			for(int j = 0; j < column; j++){
-				temp_tile = board[i][j];
-				if(temp_tile == 0){
-					if(empty_count == 0){
-						board2x3 b = board;
-						action::place(1, i * 3 + j).apply(b);
-						if(is_legal_before_state(b) == false)
-							return false;
-					}
-					empty_count++;
-				}
-				else if(temp_tile == 1){
-					one_count++;
-				}
+		// int empty_count = 0;
+		// int one_count = 0;
+		// int temp_tile;
+		// for(int i = 0; i < row; i++){
+		// 	for(int j = 0; j < column; j++){
+		// 		temp_tile = board[i][j];
+		// 		if(temp_tile == 0){
+		// 			if(empty_count == 0){
+		// 				board2x3 b = board;
+		// 				action::place(1, i * 3 + j).apply(b);
+		// 				if(is_legal_before_state(b) == false)
+		// 					return false;
+		// 			}
+		// 			empty_count++;
+		// 		}
+		// 		else if(temp_tile == 1){
+		// 			one_count++;
+		// 		}
 					
-			}
-		}
-		if(empty_count == 0)
-			return false;
+		// 	}
+		// }
+		// if(empty_count == 0)
+		// 	return false;
 
-		// 不可能在移动之后盘面上只有一个1
-		if(empty_count == 5 && one_count == 1)
-			return false;
+		// // 不可能在移动之后盘面上只有一个1
+		// if(empty_count == 5 && one_count == 1)
+		// 	return false;
 
-		// 考虑类似 1 0 0 0 0 1这样的情况
-		
+		// // 考虑类似 1 0 0 0 0 1这样的情况
 
-		return true;
+
+		// return true;
 	}
 
 	bool is_legal_before_state(board2x3 board){
