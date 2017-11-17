@@ -12,4 +12,4 @@ To dump a specific record in a statistic file
 $ ./2584-judge --load=stat.bin --dump=100
 
 To get the baseline speed (time limit)
-# ./2584-speed
+# ./2584-speed --total=10
