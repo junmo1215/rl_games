@@ -131,9 +131,6 @@ public:
 				(fibonacci[b[r][0]]),
 				(fibonacci[b[r][1]]),
 				(fibonacci[b[r][2]]));
-				// b[r][0],
-				// b[r][1],
-				// b[r][2]);
 			out << buff << std::endl;
 		}
 		out << "+------------------+" << std::endl;
