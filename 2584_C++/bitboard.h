@@ -46,14 +46,23 @@ public:
         return *this;
     }
 
+    // 重载运算符 ~
+    bitboard operator ~() const{
+        return bitboard(~_left, ~_right);
+    }
+
     // 重载位运算
     bitboard operator <<(const int& shift_num){
         if(shift_num == 0)
             return *this;
         bitboard result = *this;
-        if(shift_num < 64) {
+        if(shift_num < 16){
             result._left <<= shift_num;
             result._left |= _right >> (64 - shift_num);
+            result._right <<= shift_num;
+        }
+        else if(shift_num < 64) {
+            result._left = _right >> (64 - shift_num);
             result._right <<= shift_num;
         }
         else {
@@ -67,9 +76,13 @@ public:
     {
         if(shift_num == 0)
             return *this;
-        if(shift_num < 64) {
+        if(shift_num < 16){
             _left <<= shift_num;
             _left |= _right >> (64 - shift_num);
+            _right <<= shift_num;
+        }
+        else if(shift_num < 64) {
+            _left = _right >> (64 - shift_num);
             _right <<= shift_num;
         }
         else {
@@ -84,15 +97,33 @@ public:
         if(shift_num == 0)
             return *this;
         bitboard result = *this;
-        if(shift_num < 64) {
-            result._right >>= shift_num;
-            result._right |= _left << (64 - shift_num);
+        // 小于16和小于64的情况似乎要分开写，不知道是不是编译器参数设置的问题
+        // 目前设置的情况下，下面结果可以看出问题
+        // uint16_t a = 10;
+        // for(int i = 0; i < 64; i++){
+        //     cout << i << "\t" << (a >> i) << endl;
+        // }
+        if(shift_num < 16){
+            result._right = (_right >> shift_num) | (uint64_t)_left << (64 - shift_num); //(((uint64_t)(_left << (16 - shift_num))) << (64 - shift_num));
             result._left >>= shift_num;
         }
-        else {
+        else if(shift_num < 64){
+            result._right = (_right >> shift_num) | (uint64_t)_left << (64 - shift_num);
+            result._left = 0;
+        }
+        else{
             result._right = _left >> (shift_num - 64);
             result._left = 0;
         }
+        // if(shift_num < 64) {
+        //     result._right >>= shift_num;
+        //     result._right |= (uint64_t)_left << (64 - shift_num);
+        //     result._left >>= shift_num;
+        // }
+        // else {
+        //     result._right = _left >> (shift_num - 64);
+        //     result._left = 0;
+        // }
         return result;
     }
 
@@ -100,15 +131,27 @@ public:
     {
         if(shift_num == 0)
             return *this;
-        _right >>= shift_num;
-        if(shift_num < 64) {
-            _right |= _left << (64 - shift_num);
+        if(shift_num < 16){
+            _right = (_right >> shift_num) | (uint64_t)_left << (64 - shift_num);
             _left >>= shift_num;
         }
-        else {
+        else if(shift_num < 64){
+            _right = (_right >> shift_num) | (uint64_t)_left << (64 - shift_num);
+            _left = 0;
+        }
+        else{
             _right = _left >> (shift_num - 64);
             _left = 0;
         }
+        // _right >>= shift_num;
+        // if(shift_num < 64) {
+        //     _right |= (uint64_t)_left << (64 - shift_num);
+        //     _left >>= shift_num;
+        // }
+        // else {
+        //     _right = (uint64_t)_left >> (shift_num - 64);
+        //     _left = 0;
+        // }
         return *this;
     }
 
@@ -119,19 +162,22 @@ public:
 	 */
 	uint32_t fetch(const int& i) const {
         bitboard b = *this;
-        return ((b >> (i << 4)) & 0xfffff)._right; 
+        return ((b >> (i * 20)) & 0xfffff)._right;
     }
 
 	/**
 	 * set a 20-bit row
 	 */
-	// void place(const int& i, const int& r) { raw = (raw & ~(0xffffULL << (i << 4))) | (uint64_t(r & 0xffff) << (i << 4)); }
+	void place(const int& i, const int& r) {
+        *this = (*this & ~(bitboard(0xfffff) << (i * 20))) | (bitboard(r & 0xfffff) << (i * 20)); 
+    }
+
 	/**
 	 * get a 5-bit tile
 	 */
-	int  at(const int& i) const {
+	int at(const int& i) const {
         bitboard b = *this;
-        // auto test = (b >> (i * 5));
+        // bitboard test = (b >> (i * 5));
         // std::cout << test._left << std::endl;
         // std::cout << test._right << std::endl;
         // return (test & 0x1f)._right;
@@ -142,7 +188,7 @@ public:
 	 * set a 5-bit tile
 	 */
 	void set(const int& i, const int& t) {
-        *this = (*this & ~(0x1fULL << (i << 2))) | (bitboard(t & 0x1f) << (i << 2));
+        *this = (*this & ~(bitboard(0x1f) << (i * 5))) | (bitboard(t & 0x1f) << (i * 5));
     }
 
 
@@ -205,13 +251,13 @@ private:
         // TODO：没看懂
         // 这里的raw似乎又是代表的整个盘面了
 		void move_left(bitboard& b, int& sc, const int& i) const {
-			b |= bitboard(left) << (i << 4);
+			b |= bitboard(left) << (i * 20);
 			sc += score_l;
 		}
 
         // TODO：没看懂
 		void move_right(bitboard& b, int& sc, const int& i) const {
-			b |= bitboard(right) << (i << 4);
+			b |= bitboard(right) << (i * 20);
 			sc += score_r;
 		}
 
@@ -311,14 +357,58 @@ public:
 		return score;
 	}
 
+    /**
+     * 下面三个函数都参考了2048的bitboard变化
+     * https://github.com/moporgic/TDL2048-Demo/blob/master/2048.cpp
+     * 在2048的这个实作中每个tile占4bit(2^4 = 16)，三格和六格分别要移12和24位
+     * 这份2584的代码中每个tile占5bit(2^5 = 32)，三格和六格分别要移15和30位
+     * 
+     * 类似bitboard(0xf83e, 0x7c1ff83e007c1f)这些数字是之前2048的代码中0xf0f00f0ff0f00f0fULL这样的数字变化得到的
+     * 可以把这个数字看成一个蒙版(Mask)，具体可以通过下面的python代码转换：
+     * 
+        masks = [
+            "f0f00f0ff0f00f0f",
+            "0000f0f00000f0f0",
+            "0f0f00000f0f0000",
+            "ff00ff0000ff00ff",
+            "00000000ff00ff00",
+            "00ff00ff00000000"
+        ]
+
+        # results = []
+        for mask in masks:
+            result = ""
+            for char in mask:
+                # print(char)
+                if char == 'f':
+                    result += "11111"
+                elif char == '0':
+                    result += '00000'
+                else:
+                    raise ValueError()
+            print(result[:16] + " " + result[16:])
+            print(hex(int(result[:16],2)), hex(int(result[16:],2)))
+     * 
+     */
+
 	/**
 	 * swap row and column
-	 * +------------------------+       +------------------------+
-	 * |     2     8   128     4|       |     2     8     2     4|
-	 * |     8    32    64   256|       |     8    32     4     2|
-	 * |     2     4    32   128| ----> |   128    64    32     8|
-	 * |     4     2     8    16|       |     4   256   128    16|
-	 * +------------------------+       +------------------------+
+	 * +------------------------+
+     * |     1     3     7     2|
+     * |     3     5     6     8|
+     * |     1     2     5     7|
+     * |     2     1     3     4|
+     * +------------------------+
+     * 
+     * 变成下面这种
+     * +------------------------+
+     * |     1     3     1     2|
+     * |     3     5     2     1|
+     * |     7     6     5     3|
+     * |     2     8     7     4|
+     * +------------------------+
+     * 
+     * 
 	 */
 	void transpose() {
         bitboard result = *this;
@@ -327,14 +417,40 @@ public:
         *this = result;
 	}
 
+    /**
+	 * horizontal reflection
+	 * +------------------------+       +------------------------+
+	 * |     1     3     7     2|       |     4   128     8     2|
+	 * |     3     5     6     8|       |   256    64    32     8|
+	 * |     1     2     5     7| ----> |   128    32     4     2|
+	 * |     2     1     3     4|       |    16     8     2     4|
+	 * +------------------------+       +------------------------+
+	 */
 	void reflect_horizontal() {
+        bitboard result = *this;
+        result = ((result & bitboard(1, 0xf0001f0001f0001f)) << 15) | ((result & bitboard(0x3e, 0x3e0003e0003e0)) << 5)
+            | ((result & bitboard(0x7c0, 0x7c0007c0007c00)) >> 5) | ((result & bitboard(0xf800, 0xf8000f8000f8000)) >> 15);
+        *this = result;
 		// for (int r = 0; r < 4; r++) {
 		// 	std::swap(tile[r][0], tile[r][3]);
 		// 	std::swap(tile[r][1], tile[r][2]);
 		// }
 	}
 
+	/**
+	 * vertical reflection
+	 * +------------------------+       +------------------------+
+	 * |     1     3     7     2|       |     4   128     8     2|
+	 * |     3     5     6     8|       |   256    64    32     8|
+	 * |     1     2     5     7| ----> |   128    32     4     2|
+	 * |     2     1     3     4|       |    16     8     2     4|
+	 * +------------------------+       +------------------------+
+	 */
 	void reflect_vertical() {
+        bitboard result = *this;
+        result = ((result & bitboard(0, 0xfffff)) << 60) | ((result & bitboard(0, 0xfffff00000)) << 20)
+			| ((result & bitboard(0, 0xfffff0000000000)) >> 20) | ((result & bitboard(0xffff, 0xf000000000000000)) >> 60);
+        *this = result;
 		// for (int c = 0; c < 4; c++) {
 		// 	std::swap(tile[0][c], tile[3][c]);
 		// 	std::swap(tile[1][c], tile[2][c]);
@@ -364,14 +480,14 @@ public:
 		out << "+------------------------+" << std::endl;
 		for (int i = 0; i < 16; i += 4) {
 			std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-                b.at(i + 0),
-                b.at(i + 1),
-                b.at(i + 2),
-                b.at(i + 3));
-				// (fibonacci[b.at(i + 0)]),
-				// (fibonacci[b.at(i + 1)]),
-				// (fibonacci[b.at(i + 2)]),
-				// (fibonacci[b.at(i + 3)]));
+                // b.at(i + 0),
+                // b.at(i + 1),
+                // b.at(i + 2),
+                // b.at(i + 3));
+				(fibonacci[b.at(i + 0)]),
+				(fibonacci[b.at(i + 1)]),
+				(fibonacci[b.at(i + 2)]),
+				(fibonacci[b.at(i + 3)]));
 			out << buff << std::endl;
 		}
 		out << "+------------------------+" << std::endl;
