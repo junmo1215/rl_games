@@ -78,7 +78,7 @@ class DeepQNetwork:
         act_q_value_batch = []
         next_q_value_batch = self.q_value.eval(feed_dict={self.state_input: next_state_batch})
         for i in range(self.minibatch_size):
-            act_q_value = reward_batch[2]
+            act_q_value = reward_batch[i]
             # 下一个状态没有终止的话还需要加上之后状态的衰减
             if not minibatch[i][3]:
                 act_q_value += self.gamma * np.max(next_q_value_batch[i])
