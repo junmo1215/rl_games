@@ -59,6 +59,11 @@ public:
 	bool operator >=(const board& b) const { return !(*this < b); }
 
 public:
+	// int at(const int& i) const{return tile[i / 4][i % 4];}
+
+	// void set(const int& i, const int& value){
+	// 	tile[i / 4][i % 4] = value;
+	// }
 	/**
 	 * apply an action to the board
 	 * return the reward gained by the action, or -1 if the action is illegal

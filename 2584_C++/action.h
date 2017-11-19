@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "bitboard.h"
+#include "board.h"
 #include "board2x3.h"
 
 class action {
@@ -32,15 +32,15 @@ public:
 		return -1;
 	}
 
-	int apply(bitboard& b) const {
+	int apply(board& b) const {
 		if ((0b11 & opcode) == (opcode)) {
 			// 玩家移动
 			// player action (slide up, right, down, left)
 			return b.move(opcode);
-		} else if (b.at(opcode & 0x0f) == 0) {
+		} else if (b(opcode & 0x0f) == 0) {
 			// 环境放置新的tile
 			// environment action (place a new tile)
-			b.set(opcode & 0x0f, (opcode >> 4));
+			b(opcode & 0x0f) = (opcode >> 4);
 			return 0;
 		}
 		return -1;
