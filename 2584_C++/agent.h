@@ -61,8 +61,8 @@ public:
 		std::shuffle(space, space + 16, engine);
 		for (int pos : space) {
 			if (after(pos) != 0) continue;
-			std::uniform_int_distribution<int> popup(0, 9);
-			int tile = popup(engine) ? 1 : 2;
+			std::uniform_real_distribution<> popup(0, 1);
+			int tile = (popup(engine) > 0.25) ? 1 : 3;
 			return action::place(tile, pos);
 		}
 		return action();
@@ -127,7 +127,7 @@ public:
 			board b = before;
 			int reward = b.move(op);
 			if(reward != -1){
-				float v_s = board_value(b) + reward;
+				float v_s = get_after_expect(b, 1) + reward;
 				if(v_s > best_vs){
 					best_op = op;
 					best_vs = v_s;
@@ -145,6 +145,54 @@ public:
 			episode.push_back(step);
 		}
 		return best;
+	}
+
+	virtual float get_after_expect(const board& after, const int& search_deep){
+		if(search_deep == 0)
+			return board_value(after);
+
+		float temp_expect_1 = 0;
+		float temp_expect_3 = 0;
+		for(int tile: {1, 3}){
+			float expect = 0;
+			int count = 0;
+			for(int i = 0; i < 16; i++){
+				board b = after;
+				int apply_result = action::place(tile, i).apply(b);
+				if(apply_result != -1){
+					expect += get_before_expect(b, search_deep);
+					count++;
+				}
+			}
+			if(tile == 1)
+				temp_expect_1 = expect / count;
+			else if(tile == 3){
+				temp_expect_3 = expect / count;
+			}
+		}
+
+		float result = temp_expect_1 * 0.75 + temp_expect_3 * 0.25;
+		return result;
+	}
+
+	virtual float get_before_expect(const board& before, const int& search_deep){
+		float expect = 0;
+		float best_expect = MIN_FLOAT;
+		bool is_moved = false;
+
+		for(int op: {0, 1, 2, 3}){
+			board b = before;
+			int reward = b.move(op);
+			if(reward != -1){
+				expect = get_after_expect(b, search_deep - 1) + reward;
+				if(expect > best_expect){
+					is_moved = true;
+					best_expect = expect;
+				}
+			}
+		}
+
+		return is_moved ? best_expect : 0;
 	}
 
 public:
