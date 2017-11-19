@@ -26,13 +26,13 @@ def main():
         for char in mask:
             # print(char)
             if char == 'f':
-                result += "11111"
+                result += "11111111"
             elif char == '0':
-                result += '00000'
+                result += '00000000'
             else:
                 raise ValueError()
-        print(result[:16] + " " + result[16:])
-        print(hex(int(result[:16],2)), hex(int(result[16:],2)))
+        print(result[:64] + " " + result[64:])
+        print(hex(int(result[:64],2)), hex(int(result[64:],2)))
 
 if __name__ == "__main__":
     main()
