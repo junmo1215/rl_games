@@ -96,7 +96,7 @@ int main(int argc, const char* argv[]) {
 		evil.open_episode(play.name() + ":~");
 
 		stat.open_episode(play.name() + ":" + evil.name());
-		board game = stat.make_empty_board();
+		bitboard game = stat.make_empty_board();
 
         while (true) {
             agent& who = stat.take_turns(play, evil);
