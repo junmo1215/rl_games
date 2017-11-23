@@ -23,7 +23,7 @@
 
 static const int POSSIBLE_INDEX = 32;
 
-static const int MAX_INDEX = 19;
+static const int MAX_INDEX = 18;
 
 static const int TUPLE_NUM = 32;
 

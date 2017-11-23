@@ -42,7 +42,7 @@ void save_statistic(const statistic stat, const std::string save){
 int main(int argc, const char* argv[]) {
 	clock_t startTime,endTime;
 	startTime = clock();
-    //freopen("2.txt","w",stdout);
+    // freopen("1.txt","w",stdout);
 
 	std::cout << "2584: ";	
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
