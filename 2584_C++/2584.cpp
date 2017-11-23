@@ -123,7 +123,6 @@ int main(int argc, const char* argv[]) {
 		if(i % 50000 == 0){
 			play.save_weights();
 		}
-			
     }
 
 	if (summary) {

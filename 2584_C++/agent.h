@@ -92,6 +92,8 @@ public:
 			const long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
 			for(int i = 0; i < TUPLE_NUM; i++){
 				weights.push_back(weight(feature_num));
+				weightsE.push_back(weight(feature_num));
+				weightsA.push_back(weight(feature_num));
 			}
 		}
 	}
@@ -239,6 +241,8 @@ public:
 
 private:
 	std::vector<weight> weights;
+	std::vector<weight> weightsE;
+	std::vector<weight> weightsA;
 
 	struct state {
 		// select the necessary components of a state
@@ -298,9 +302,19 @@ private:
 	void train_weights(const board& b, const board& next_b, const int reward){
 		// 这个写法比之前的速度快，并且逻辑上更加说得通一点
 		// 在更新weight的同时不应该由于前面几次循环中调整了weight而修改board value
-		float delta = alpha * (reward + board_value(next_b) - board_value(b));
+		float delta = reward + board_value(next_b) - board_value(b);
 		for(int i = 0; i < TUPLE_NUM; i++){
-			weights[i][get_feature(b, indexs[i])] += delta;
+			int feature = get_feature(b, indexs[i]);
+			int temp_learning_rate;
+			float a_feature = weightsA[i][feature];
+			if(a_feature == 0)
+				temp_learning_rate = 1;
+			else
+				temp_learning_rate = fabs(weightsE[i][feature]) / a_feature;
+
+			weights[i][feature] += alpha * delta * temp_learning_rate;
+			weightsE[i][feature] += delta;
+			weightsA[i][feature] += fabs(delta);
 		}
 	}
 
