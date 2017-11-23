@@ -116,8 +116,8 @@ int main(int argc, const char* argv[]) {
 			save_statistic(stat, save);
 		
 		// 每200000局改变一次learning rate
-		if(i % 200000 == 0)
-			play.change_learning_rate();
+		// if(i % 200000 == 0)
+		// 	play.change_learning_rate();
 
 		// 每50000局保存一次weights
 		if(i % 50000 == 0){
