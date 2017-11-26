@@ -5,7 +5,7 @@
 #include <map>
 #include <type_traits>
 #include <algorithm>
-#include "bitboard.h"
+#include "board.h"
 #include "action.h"
 #include "weight.h"
 
@@ -24,8 +24,8 @@ public:
 	virtual ~agent() {}
 	virtual void open_episode(const std::string& flag = "") {}
 	virtual void close_episode(const std::string& flag = "") {}
-	virtual action take_action(const bitboard& b) { return action(); }
-	virtual bool check_for_win(const bitboard& b) { return false; }
+	virtual action take_action(const board& b) { return action(); }
+	virtual bool check_for_win(const board& b) { return false; }
 
 public:
 	virtual std::string name() const {
@@ -56,11 +56,11 @@ public:
 			engine.seed(int(property["seed"]));
 	}
 
-	virtual action take_action(const bitboard& after) {
+	virtual action take_action(const board& after) {
 		int space[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 		std::shuffle(space, space + 16, engine);
 		for (int pos : space) {
-			if (after.at(pos) != 0) continue;
+			if (after(pos) != 0) continue;
 			std::uniform_real_distribution<> popup(0, 1);
 			int tile = (popup(engine) > 0.25) ? 1 : 3;
 			return action::place(tile, pos);
@@ -117,16 +117,16 @@ public:
 		}
 	}
 
-	virtual action take_action(const bitboard& before) {
+	virtual action take_action(const board& before) {
 		// select a proper action
 		int best_op = 0;
 		float best_vs = MIN_FLOAT;
-		bitboard after;
+		board after;
 		int best_reward = 0;
 
 		// 模拟四种动作，取实验后盘面最好的动作作为best
 		for(int op: {3, 2, 1, 0}){
-			bitboard b = before;
+			board b = before;
 			int reward = b.move(op);
 			if(reward != -1){
 				float v_s = get_after_expect(b, 1) + reward;
@@ -149,7 +149,7 @@ public:
 		return best;
 	}
 
-	virtual float get_after_expect(const bitboard& after, const int& search_deep){
+	virtual float get_after_expect(const board& after, const int& search_deep){
 		if(search_deep == 0)
 			return board_value(after);
 
@@ -159,7 +159,7 @@ public:
 			float expect = 0;
 			int count = 0;
 			for(int i = 0; i < 16; i++){
-				bitboard b = after;
+				board b = after;
 				int apply_result = action::place(tile, i).apply(b);
 				if(apply_result != -1){
 					expect += get_before_expect(b, search_deep);
@@ -177,13 +177,13 @@ public:
 		return result;
 	}
 
-	virtual float get_before_expect(const bitboard& before, const int& search_deep){
+	virtual float get_before_expect(const board& before, const int& search_deep){
 		float expect = 0;
 		float best_expect = MIN_FLOAT;
 		bool is_moved = false;
 
 		for(int op: {0, 1, 2, 3}){
-			bitboard b = before;
+			board b = before;
 			int reward = b.move(op);
 			if(reward != -1){
 				expect = get_after_expect(b, search_deep - 1) + reward;
@@ -266,7 +266,7 @@ private:
 
 	struct state {
 		// select the necessary components of a state
-		bitboard after;
+		board after;
 		int reward;
 	};
 
@@ -286,7 +286,7 @@ private:
 	 * 这样做虽然最后达到的最大分数会稍微低一点，并且胜率也不会太高
 	 * 但是收敛速度会稍微快些，并且节省了很多内存
 	 */
-	long get_feature(const bitboard& b, const std::array<int, TUPLE_LENGTH> index){
+	long get_feature(const board& b, const std::array<int, TUPLE_LENGTH> index){
 		long result = 0;
 		int tile;
 		for(int i : index){
@@ -295,8 +295,8 @@ private:
 			// 下面几种写法结果相同，只有速度上有些差异
 			// tile = b[i / 4][i % 4];
 			// tile = b[i >> 2][i & 0b11];
-			// tile = *(&(b[0][0]) + i);
-			tile = b.at(i);
+			tile = *(&(b[0][0]) + i);
+			// tile = b.at(i);
 			// 目前我電腦12G內存沒辦法跑之前的代碼
 			if(tile >= (MAX_INDEX - 1)){
 				result += (MAX_INDEX - 1);
@@ -311,7 +311,7 @@ private:
 	/**
 	 * 获取盘面的估值
 	 */
-	float board_value(const bitboard& b){
+	float board_value(const board& b){
 		float result = 0;
 		for(int i = 0; i < TUPLE_NUM; i++){
 			result += weights[i][get_feature(b, indexs[i])];
@@ -319,7 +319,7 @@ private:
 		return result;
 	}
 
-	void train_weights(const bitboard& b, const bitboard& next_b, const int reward){
+	void train_weights(const board& b, const board& next_b, const int reward){
 		// 这个写法比之前的速度快，并且逻辑上更加说得通一点
 		// 在更新weight的同时不应该由于前面几次循环中调整了weight而修改board value
 		float delta = reward + board_value(next_b) - board_value(b);
@@ -338,7 +338,7 @@ private:
 		}
 	}
 
-	void train_weights(const bitboard& b){
+	void train_weights(const board& b){
 		// std::cout << "void train_weights(const board& b)" << std::endl;
 		float delta = - board_value(b);
 		for(int i = 0; i < TUPLE_NUM; i++){

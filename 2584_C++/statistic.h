@@ -5,7 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <numeric>
-#include "bitboard.h"
+#include "board.h"
 #include "action.h"
 #include "agent.h"
 
@@ -54,7 +54,7 @@ public:
 		auto it = data.end();
 		for (int i = 0; i < block; i++) {
 			auto& path = *(--it);
-			bitboard game;
+			board game;
 			size_t score = 0;
 			for (const action& move : path)
 				score += move.apply(game);
@@ -63,7 +63,7 @@ public:
 			opc += (path.size() - 2) / 2;
 			int tile = 0;
 			for (int i = 0; i < 16; i++)
-				tile = std::max(tile, game.at(i));
+				tile = std::max(tile, game(i));
 			stat[tile]++;
 			duration += (path.tock_time() - path.tick_time());
 		}
@@ -108,8 +108,8 @@ public:
 		if (count % block == 0) show();
 	}
 
-	bitboard make_empty_board() {
-		return bitboard();
+	board make_empty_board() {
+		return board();
 	}
 
 	void save_action(const action& move) {

@@ -17,7 +17,7 @@
 #include <cmath>
 #include <chrono>
 #include "board.h"
-#include "bitboard.h"
+// #include "bitboard.h"
 #include "action.h"
 #include "agent.h"
 #include "statistic.h"
@@ -96,7 +96,7 @@ int main(int argc, const char* argv[]) {
 		evil.open_episode(play.name() + ":~");
 
 		stat.open_episode(play.name() + ":" + evil.name());
-		bitboard game = stat.make_empty_board();
+		board game = stat.make_empty_board();
 
         while (true) {
             agent& who = stat.take_turns(play, evil);
