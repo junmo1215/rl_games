@@ -13,6 +13,10 @@
  */ 
 #pragma once
 
+const static int times_5[16] = {0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75};
+const static int times_20[16] = {0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300};
+// static long long aaaa = 0;
+
 class bitboard {
 
 public:
@@ -102,7 +106,7 @@ public:
         //     cout << i << "\t" << (a >> i) << endl;
         // }
         if(shift_num < 16){
-            result._right = (_right >> shift_num) | (uint64_t)_left << (64 - shift_num); //(((uint64_t)(_left << (16 - shift_num))) << (64 - shift_num));
+            result._right = (_right >> shift_num) | (uint64_t)_left << (64 - shift_num);
             result._left >>= shift_num;
         }
         else if(shift_num < 64){
@@ -142,14 +146,14 @@ public:
 	 */
 	uint32_t fetch(const int& i) const {
         bitboard b = *this;
-        return ((b >> (i * 20)) & 0xfffff)._right;
+        return ((b >> times_20[i]) & 0xfffff)._right;
     }
 
 	/**
 	 * set a 20-bit row
 	 */
 	void place(const int& i, const int& r) {
-        *this = (*this & ~(bitboard(0xfffff) << (i * 20))) | (bitboard(r & 0xfffff) << (i * 20)); 
+        *this = (*this & ~(bitboard(0xfffff) << times_20[i])) | (bitboard(r & 0xfffff) << times_20[i]); 
     }
 
 	/**
@@ -157,14 +161,17 @@ public:
 	 */
 	int at(const int& i) const {
         bitboard b = *this;
-        return ((b >> (i * 5)) & 0x1f)._right;
+        return ((b >> times_5[i]) & 0x1f)._right;
     }
 
 	/**
 	 * set a 5-bit tile
 	 */
 	void set(const int& i, const int& t) {
-        *this = (*this & ~(bitboard(0x1f) << (i * 5))) | (bitboard(t & 0x1f) << (i * 5));
+		// std::cout << i << "\t" << t << std::endl;
+        *this = (*this & ~(bitboard(0x1f) << times_5[i])) | (bitboard(t & 0x1f) << times_5[i]);
+		// std::cout << times_5[i] << "\t" << *this << std::endl;
+		// throw;
     }
 
 public:
@@ -192,7 +199,7 @@ private:
              */
             if(r > 0xfffff)
                 return;
-
+			
 			raw = r;
 
             // 分别代表这一行中的tile序号
@@ -209,16 +216,14 @@ private:
 			right = ((R[0] << 0) | (R[1] << 5) | (R[2] << 10) | (R[3] << 15));
 		}
 
-        // TODO：没看懂
-        // 这里的raw似乎又是代表的整个盘面了
+		// 把每一行左移的结果拼成一个盘面，这个盘面就是整个盘面左移的结果
 		void move_left(bitboard& b, int& sc, const int& i) const {
-			b |= bitboard(left) << (i * 20);
+			b |= bitboard(left) << times_20[i];
 			sc += score_l;
 		}
 
-        // TODO：没看懂
 		void move_right(bitboard& b, int& sc, const int& i) const {
-			b |= bitboard(right) << (i * 20);
+			b |= bitboard(right) << times_20[i];
 			sc += score_r;
 		}
 
@@ -228,6 +233,7 @@ private:
         }
 
 		static int mvleft(uint32_t row[]) {
+			// aaaa++;
 			int top = 0;
 			int tmp = 0;
 			int score = 0;
@@ -255,7 +261,9 @@ private:
 		}
 
 		lookup() {
-			static int row = 0;
+			static uint32_t row = 0;
+			if(row > 0xfffff)
+				return;
 			init(row++);
 		}
 
