@@ -214,10 +214,6 @@ public:
 			in >> a;
 		for (weight& e : weightsE)
 			in >> e;
-		// std::cout << size << std::endl;
-		// std::cout << weights.size() << std::endl;
-		// std::cout << weightsA.size() << std::endl;
-		// std::cout << weightsE.size() << std::endl;
 		in.close();
 	}
 
@@ -227,10 +223,6 @@ public:
 		out.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!out.is_open()) std::exit(-1);
 		size_t size = weights.size() + weightsA.size() + weightsE.size();
-		// std::cout << size << std::endl;
-		// std::cout << weights.size() << std::endl;
-		// std::cout << weightsA.size() << std::endl;
-		// std::cout << weightsE.size() << std::endl;
 		out.write(reinterpret_cast<char*>(&size), sizeof(size));
 		for (weight& w : weights){
 			out << w;
@@ -339,26 +331,18 @@ private:
 	}
 
 	void train_weights(const board& b){
-		// std::cout << "void train_weights(const board& b)" << std::endl;
 		float delta = - board_value(b);
 		for(int i = 0; i < TUPLE_NUM; i++){
-			// std::cout << "1" << std::endl;
 			long feature = get_feature(b, indexs[i]);
 			float temp_learning_rate;
-			// std::cout << "2" << std::endl;
-			// std::cout << i << "    " << feature << std::endl;
 			float a_feature = weightsA[i][feature];
-			// std::cout << "3" << i << std::endl;
-			// std::cout << a_feature << std::endl;
 			if(a_feature == 0)
 				temp_learning_rate = 1;
 			else
 				temp_learning_rate = fabs(weightsE[i][feature]) / a_feature;
-			// std::cout << "4" << i << std::endl;
 			weights[i][feature] += alpha * delta * temp_learning_rate;
 			weightsE[i][feature] += delta;
 			weightsA[i][feature] += fabs(delta);
-			// weights[i][get_feature(b, indexs[i])] += delta;
 		}
 	}
 };

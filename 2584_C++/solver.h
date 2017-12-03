@@ -114,6 +114,11 @@ private:
 	}
 
 	float get_after_expect(board2x3 board){
+	    int index = get_index(board);
+
+	    if(after_expects[index] > -1)
+    	    return after_expects[index];
+
 		float temp_expects[2] = {0, 0};
 		for(int i: {1, 2}){
 			float expect = 0;
@@ -130,20 +135,17 @@ private:
 		}
 
 		float result = temp_expects[0] * 0.9 + temp_expects[1] * 0.1;
-		after_expects[get_index(board)] = result;
+		after_expects[index] = result;
 
 		return result;
 	}
 
 	bool is_legal_after_state(board2x3 board){
-		int index = get_index(board);
-		return after_expects[index] != -1;
+		return after_expects[get_index(board)] != -1;
 	}
 
 	bool is_legal_before_state(board2x3 board){
-		int index = get_index(board);
-		return expects[index] != -1;
-
+		return expects[get_index(board)] != -1;
 	}
 
 	int get_index(board2x3 board){
