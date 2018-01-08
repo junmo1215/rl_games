@@ -24,7 +24,9 @@ public:
 	virtual ~agent() {}
 	virtual void open_episode(const std::string& flag = "") {}
 	virtual void close_episode(const std::string& flag = "") {}
-	virtual action take_action(const board& b) { return action(); }
+	virtual action take_action(const board& b) { 
+		// std::cout << " agent take_action" << std::endl;
+		return action(); }
 	virtual bool check_for_win(const board& b) { return false; }
 
 public:
@@ -32,125 +34,36 @@ public:
 	virtual std::string role() const { return property.at("role"); }
 	virtual void notify(const std::string& msg) { property[msg.substr(0, msg.find('='))] = { msg.substr(msg.find('=') + 1) }; }
 
-protected:
-	typedef std::string key;
-	struct value {
-		std::string value;
-		operator std::string() const { return value; }
-		template<typename numeric, typename = typename std::enable_if<std::is_arithmetic<numeric>::value, numeric>::type>
-		operator numeric() const { return numeric(std::stod(value)); }
-	};
-	std::map<key, value> property;
-};
+	const static std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> indexs;
 
-/**
- * evil (environment agent)
- * add a new random tile on board, or do nothing if the board is full
- * 1-tile: 90%
- * 2-tile: 10%
- */
-class rndenv : public agent {
-public:
-	rndenv(const std::string& args = "") : agent("name=rndenv  role=environment " + args) {
-		if (property.find("seed") != property.end())
-			engine.seed(int(property["seed"]));
-	}
+	static std::vector<weight> weights;
+	static std::vector<weight> weightsE;
+	static std::vector<weight> weightsA;
 
-	virtual action take_action(const board& after) {
-		int space[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-		std::shuffle(space, space + 16, engine);
-		for (int pos : space) {
-			if (after(pos) != 0) continue;
-			std::uniform_real_distribution<> popup(0, 1);
-			int tile = (popup(engine) > 0.25) ? 1 : 3;
-			return action::place(tile, pos);
+	static void save_weights(const std::string& path) {
+		std::cout << "saving weights to " << path.c_str() << std::endl;
+		std::ofstream out;
+		out.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+		if (!out.is_open()) std::exit(-1);
+		size_t size = weights.size() + weightsA.size() + weightsE.size();
+		out.write(reinterpret_cast<char*>(&size), sizeof(size));
+		for (weight& w : weights){
+			out << w;
 		}
-		return action();
-	}
-
-private:
-	std::default_random_engine engine;
-};
-
-/**
- * player (dummy)
- * select an action randomly
- */
-class player : public agent {
-public:
-	player(const std::string& args = "") : agent("name=player role=player " + args),  alpha(0.0025f) {
-		episode.reserve(32768);
-		if (property.find("seed") != property.end())
-			engine.seed(int(property["seed"]));
-		if (property.find("alpha") != property.end())
-			alpha = float(property["alpha"]);
-
-		if (property.find("load") != property.end()){
-			load_weights(property["load"]);
+		for (weight& a : weightsA){
+			out << a;
 		}
-		else{
-			// initialize the n-tuple network
-			const long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
-			for(int i = 0; i < TUPLE_NUM; i++){
-				weights.push_back(weight(feature_num));
-				weightsE.push_back(weight(feature_num));
-				weightsA.push_back(weight(feature_num));
-			}
+		for (weight& e : weightsE){
+			out << e;
 		}
+		out.flush();
+		out.close();
+		std::cout << "save weights success " << std::endl;
 	}
 
-	~player() {
-		save_weights();
-	}
-
-	virtual void open_episode(const std::string& flag = "") {
-		episode.clear();
-		episode.reserve(32768);
-	}
-
-	virtual void close_episode(const std::string& flag = "") {
-		// train the n-tuple network by TD(0)
-		train_weights(episode[episode.size() - 1].after);
-		for(int i = episode.size() - 2; i >= 0; i--){
-			state step_next = episode[i + 1];
-
-			train_weights(episode[i].after, step_next.after, step_next.reward);
-		}
-	}
-
-	virtual action take_action(const board& before) {
-		// select a proper action
-		int best_op = 0;
-		float best_vs = MIN_FLOAT;
-		board after;
-		int best_reward = 0;
-
-		// 模拟四种动作，取实验后盘面最好的动作作为best
-		for(int op: {3, 2, 1, 0}){
-			board b = before;
-			int reward = b.move(op);
-			if(reward != -1){
-				float v_s = get_after_expect(b, 1) + reward;
-				if(v_s > best_vs){
-					best_op = op;
-					best_vs = v_s;
-					after = b;
-					best_reward = reward;
-				}
-			}
-		}
-		action best(best_op);
-
-		// push the step into episode
-		// 如果这一步有效（改变过best_vs的值）才放入episode里面
-		if(best_vs != MIN_FLOAT){
-			struct state step = {after, best_reward};
-			episode.push_back(step);
-		}
-		return best;
-	}
 
 	virtual float get_after_expect(const board& after, const int& search_deep){
+		// std::cout << "enter get_after_expect" << std::endl;
 		if(search_deep == 0)
 			return board_value(after);
 
@@ -182,10 +95,11 @@ public:
 		float expect = 0;
 		float best_expect = MIN_FLOAT;
 		bool is_moved = false;
-
+		// std::cout << "1" << std::endl;
 		for(int op: {0, 1, 2, 3}){
 			board b = before;
 			int reward = b.move(op);
+			// std::cout << "reward:" << reward << std::endl << b;
 			if(reward != -1){
 				expect = get_after_expect(b, search_deep - 1) + reward;
 				if(expect > best_expect){
@@ -198,78 +112,34 @@ public:
 		return is_moved ? best_expect : 0;
 	}
 
-public:
-	virtual void load_weights(const std::string& path) {
-		std::cout << "loading weights... " << std::endl;
-		std::ifstream in;
-		in.open(path.c_str(), std::ios::in | std::ios::binary);
-		if (!in.is_open()) std::exit(-1);
-		size_t size;
-		in.read(reinterpret_cast<char*>(&size), sizeof(size));
-		weights.resize(size / 3);
-		weightsA.resize(size / 3);
-		weightsE.resize(size / 3);
-		for (weight& w : weights)
-			in >> w;
-		for (weight& a : weightsA)
-			in >> a;
-		for (weight& e : weightsE)
-			in >> e;
-		in.close();
-	}
-
-	virtual void save_weights(const std::string& path) {
-		std::cout << "saving weights to " << path.c_str() << std::endl;
-		std::ofstream out;
-		out.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-		if (!out.is_open()) std::exit(-1);
-		size_t size = weights.size() + weightsA.size() + weightsE.size();
-		out.write(reinterpret_cast<char*>(&size), sizeof(size));
-		for (weight& w : weights){
-			out << w;
-		}
-		for (weight& a : weightsA){
-			out << a;
-		}
-		for (weight& e : weightsE){
-			out << e;
-		}
-		out.flush();
-		out.close();
-		std::cout << "save weights success " << std::endl;
-	}
-
-	virtual void save_weights(){
-		if (property.find("save") != property.end())
-			save_weights(property["save"]);
-	}
-
-	virtual void change_learning_rate(){
-		std::cout << "learning rate: " << alpha;
-		alpha /= 2;
-		std::cout << " change to : " << alpha << std::endl;
-	}
-
-	const static std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> indexs;
-
-private:
-	std::vector<weight> weights;
-	std::vector<weight> weightsE;
-	std::vector<weight> weightsA;
-
-	struct state {
-		// select the necessary components of a state
-		board after;
-		int reward;
+protected:
+	typedef std::string key;
+	struct value {
+		std::string value;
+		operator std::string() const { return value; }
+		template<typename numeric, typename = typename std::enable_if<std::is_arithmetic<numeric>::value, numeric>::type>
+		operator numeric() const { return numeric(std::stod(value)); }
 	};
+	std::map<key, value> property;
 
-	std::vector<state> episode;
-	float alpha;
 
-private:
-	std::default_random_engine engine;
+	/**
+	 * 获取盘面的估值
+	 */
+	float board_value(const board& b){
+		// std::cout << "enter board_value" << std::endl;
+		float result = 0;
+		for(int i = 0; i < TUPLE_NUM; i++){
+			// std::cout << "i\t" << i << std::endl;
+			// std::cout << "b\t" << b << std::endl;
+			// std::cout << "get_feature\t" << get_feature(b, indexs[i]) << std::endl;
+			// std::cout << "weights\t" << weights[i][0] << std::endl;
 
-private:
+			result += weights[i][get_feature(b, indexs[i])];
+		}
+		return result;
+	}
+
 	/**
 	 * 根据局面和位置获取对应的feature
 	 * 
@@ -301,17 +171,199 @@ private:
 		return result;
 	}
 
-	/**
-	 * 获取盘面的估值
-	 */
-	float board_value(const board& b){
-		float result = 0;
-		for(int i = 0; i < TUPLE_NUM; i++){
-			result += weights[i][get_feature(b, indexs[i])];
-		}
-		return result;
+	virtual void load_weights(const std::string& path) {
+		std::cout << "loading weights... " << std::endl;
+		std::ifstream in;
+		in.open(path.c_str(), std::ios::in | std::ios::binary);
+		if (!in.is_open()) std::exit(-1);
+		size_t size;
+		in.read(reinterpret_cast<char*>(&size), sizeof(size));
+		weights.resize(size / 3);
+		weightsA.resize(size / 3);
+		weightsE.resize(size / 3);
+		for (weight& w : weights)
+			in >> w;
+		for (weight& a : weightsA)
+			in >> a;
+		for (weight& e : weightsE)
+			in >> e;
+		in.close();
 	}
 
+public:
+
+	virtual void init_network(){
+		// initialize the n-tuple network
+		std::cout << "initialize the n-tuple network" << std::endl;
+		const long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
+		for(int i = 0; i < TUPLE_NUM; i++){
+			weights.push_back(weight(feature_num));
+			// std::cout << weights[i][100] << std::endl;
+			weightsE.push_back(weight(feature_num));
+			weightsA.push_back(weight(feature_num));
+		}
+		// std::cout << "end initialize the n-tuple network" << std::endl;
+		// std::cout << weights[0][0] << std::endl;
+	}
+};
+
+/**
+ * evil (environment agent)
+ * add a new random tile on board, or do nothing if the board is full
+ * 1-tile: 75%
+ * 3-tile: 25%
+ */
+class rndenv : public agent {
+public:
+	rndenv(const std::string& args = "") : agent("name=rndenv  role=environment " + args) {
+		if (property.find("seed") != property.end())
+			engine.seed(int(property["seed"]));
+	}
+
+	virtual action take_action(const board& after) {
+		// std::cout << "rndenv take_action" << std::endl;
+		// std::cout << after;
+		int space[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+
+		float min_expect = -MIN_FLOAT;
+		int best_pos = -1;
+		for(int pos : space){
+			if(after(pos) != 0) continue;
+
+			float temp_expect = -MIN_FLOAT;
+
+			// std::cout << "before get_before_expect" << std::endl;
+			// std::cout << after;
+			temp_expect = get_before_expect(after, 1);
+			// std::cout << "after get_before_expect" << std::endl;
+
+			if(temp_expect < min_expect){
+				min_expect = temp_expect;
+				best_pos = pos;
+			}
+		}
+
+		// std::shuffle(space, space + 16, engine);
+		// for (int pos : space) {
+		// 	if (after(pos) != 0) continue;
+		// 	std::uniform_real_distribution<> popup(0, 1);
+		// 	int tile = (popup(engine) > 0.25) ? 1 : 3;
+		// 	return action::place(tile, pos);
+		// }
+		if(best_pos != -1){
+			std::uniform_real_distribution<> popup(0, 1);
+			int tile = (popup(engine) > 0.25) ? 1 : 3;
+			return action::place(tile, best_pos);
+		}
+
+		return action();
+	}
+
+private:
+	std::default_random_engine engine;
+};
+
+/**
+ * player (dummy)
+ * select an action randomly
+ */
+class player : public agent {
+public:
+	player(const std::string& args = "") : agent("name=player role=player " + args),  alpha(0.0025f) {
+		episode.reserve(32768);
+		if (property.find("seed") != property.end())
+			engine.seed(int(property["seed"]));
+		if (property.find("alpha") != property.end())
+			alpha = float(property["alpha"]);
+
+		if (property.find("load") != property.end()){
+			load_weights(property["load"]);
+		}
+		else{
+			init_network();
+		}
+	}
+
+	~player() {
+		save_weights();
+	}
+
+	virtual void save_weights(){
+		if (property.find("save") != property.end())
+			agent::save_weights(property["save"]);
+	}
+
+	virtual void open_episode(const std::string& flag = "") {
+		episode.clear();
+		episode.reserve(32768);
+	}
+
+	virtual void close_episode(const std::string& flag = "") {
+		// train the n-tuple network by TD(0)
+		train_weights(episode[episode.size() - 1].after);
+		for(int i = episode.size() - 2; i >= 0; i--){
+			state step_next = episode[i + 1];
+
+			train_weights(episode[i].after, step_next.after, step_next.reward);
+		}
+	}
+
+	virtual action take_action(const board& before) {
+		// std::cout << "player take_action" << std::endl;
+		// std::cout << before;
+		
+		// select a proper action
+		int best_op = 0;
+		float best_vs = MIN_FLOAT;
+		board after;
+		int best_reward = 0;
+
+		// 模拟四种动作，取实验后盘面最好的动作作为best
+		for(int op: {3, 2, 1, 0}){
+			board b = before;
+			int reward = b.move(op);
+			if(reward != -1){
+				float v_s = get_after_expect(b, 1) + reward;
+				if(v_s > best_vs){
+					best_op = op;
+					best_vs = v_s;
+					after = b;
+					best_reward = reward;
+				}
+			}
+		}
+		action best(best_op);
+
+		// push the step into episode
+		// 如果这一步有效（改变过best_vs的值）才放入episode里面
+		if(best_vs != MIN_FLOAT){
+			struct state step = {after, best_reward};
+			episode.push_back(step);
+		}
+		return best;
+	}
+
+public:
+	virtual void change_learning_rate(){
+		std::cout << "learning rate: " << alpha;
+		alpha /= 2;
+		std::cout << " change to : " << alpha << std::endl;
+	}
+
+private:
+	struct state {
+		// select the necessary components of a state
+		board after;
+		int reward;
+	};
+
+	std::vector<state> episode;
+	float alpha;
+
+private:
+	std::default_random_engine engine;
+
+private:
 	void train_weights(const board& b, const board& next_b, const int reward){
 		// 这个写法比之前的速度快，并且逻辑上更加说得通一点
 		// 在更新weight的同时不应该由于前面几次循环中调整了weight而修改board value
@@ -348,9 +400,13 @@ private:
 	}
 };
 
+std::vector<weight> agent::weights;
+std::vector<weight> agent::weightsE;
+std::vector<weight> agent::weightsA;
+
 // N-tuple中feature的索引，其中前面四行是基础的索引（两个斧头形状两个2 * 3的box）
 // 前面四组是由第一组旋转得到的新的索引，后面四组是前面四组对称得到的
-const std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> player::indexs = {{
+const std::array<std::array<int, TUPLE_LENGTH>, TUPLE_NUM> agent::indexs = {{
 	{{0, 4, 8, 9, 12, 13}},
 	{{1, 5, 9, 10, 13, 14}},
 	{{1, 2, 5, 6, 9, 10}},

@@ -16,6 +16,9 @@
 #include <fstream>
 #include <cmath>
 #include <chrono>
+#include <map>
+#include <regex>
+#include <memory>
 #include "board.h"
 // #include "bitboard.h"
 #include "action.h"
@@ -179,6 +182,7 @@ int shell(int argc, const char* argv[]) {
 * 这里只记录了最近1000局(limit)的盘面信息以及统计结果，没有保存weight
 */
 void save_statistic(const statistic stat, const std::string save){
+	// std::cout << "begin save_statistic" << std::endl;
 	if (save.size()) {
 		std::ofstream out;
 		out.open(save.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -187,6 +191,7 @@ void save_statistic(const statistic stat, const std::string save){
 		out.flush();
 		out.close();
 	}
+	// std::cout << "end save_statistic" << std::endl;
 }
 
 int main(int argc, const char* argv[]) {
@@ -249,8 +254,10 @@ int main(int argc, const char* argv[]) {
 
 		stat.open_episode(play.name() + ":" + evil.name());
 		board game = stat.make_empty_board();
-
+		// std::cout << game << std::endl;
+		// action::place(3, 0).apply(game);
         while (true) {
+			// std::cout << game << std::endl;
             agent& who = stat.take_turns(play, evil);
             action move = who.take_action(game);
             if (move.apply(game) == -1) break;
