@@ -12,7 +12,7 @@
 class agent {
 public:
 	agent(const std::string& args = "") {
-		std::stringstream ss("name=unknown role=unknown " + args);
+		std::stringstream ss(args);
 		for (std::string pair; ss >> pair; ) {
 			std::string key = pair.substr(0, pair.find('='));
 			std::string value = pair.substr(pair.find('=') + 1);
@@ -24,9 +24,7 @@ public:
 	virtual ~agent() {}
 	virtual void open_episode(const std::string& flag = "") {}
 	virtual void close_episode(const std::string& flag = "") {}
-	virtual action take_action(const board& b) { 
-		// std::cout << " agent take_action" << std::endl;
-		return action(); }
+	virtual action take_action(const board& b) { return action(); }
 	virtual bool check_for_win(const board& b) { return false; }
 
 public:
@@ -63,7 +61,6 @@ public:
 
 
 	virtual float get_after_expect(const board& after, const int& search_deep){
-		// std::cout << "enter get_after_expect" << std::endl;
 		if(search_deep == 0)
 			return board_value(after);
 
@@ -95,11 +92,9 @@ public:
 		float expect = 0;
 		float best_expect = MIN_FLOAT;
 		bool is_moved = false;
-		// std::cout << "1" << std::endl;
 		for(int op: {0, 1, 2, 3}){
 			board b = before;
 			int reward = b.move(op);
-			// std::cout << "reward:" << reward << std::endl << b;
 			if(reward != -1){
 				expect = get_after_expect(b, search_deep - 1) + reward;
 				if(expect > best_expect){
@@ -127,14 +122,8 @@ protected:
 	 * 获取盘面的估值
 	 */
 	float board_value(const board& b){
-		// std::cout << "enter board_value" << std::endl;
 		float result = 0;
 		for(int i = 0; i < TUPLE_NUM; i++){
-			// std::cout << "i\t" << i << std::endl;
-			// std::cout << "b\t" << b << std::endl;
-			// std::cout << "get_feature\t" << get_feature(b, indexs[i]) << std::endl;
-			// std::cout << "weights\t" << weights[i][0] << std::endl;
-
 			result += weights[i][get_feature(b, indexs[i])];
 		}
 		return result;
@@ -198,12 +187,9 @@ public:
 		const long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
 		for(int i = 0; i < TUPLE_NUM; i++){
 			weights.push_back(weight(feature_num));
-			// std::cout << weights[i][100] << std::endl;
 			weightsE.push_back(weight(feature_num));
 			weightsA.push_back(weight(feature_num));
 		}
-		// std::cout << "end initialize the n-tuple network" << std::endl;
-		// std::cout << weights[0][0] << std::endl;
 	}
 };
 
@@ -218,11 +204,15 @@ public:
 	rndenv(const std::string& args = "") : agent("name=rndenv  role=environment " + args) {
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
+		// if (property.find("load") != property.end()){
+		// 	load_weights(property["load"]);
+		// }
+		// else{
+		// 	init_network();
+		// }
 	}
 
 	virtual action take_action(const board& after) {
-		// std::cout << "rndenv take_action" << std::endl;
-		// std::cout << after;
 		int space[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 
 		float min_expect = -MIN_FLOAT;
@@ -230,26 +220,13 @@ public:
 		for(int pos : space){
 			if(after(pos) != 0) continue;
 
-			float temp_expect = -MIN_FLOAT;
-
-			// std::cout << "before get_before_expect" << std::endl;
-			// std::cout << after;
-			temp_expect = get_before_expect(after, 1);
-			// std::cout << "after get_before_expect" << std::endl;
-
+			float temp_expect = get_before_expect(after, 1);
 			if(temp_expect < min_expect){
 				min_expect = temp_expect;
 				best_pos = pos;
 			}
 		}
 
-		// std::shuffle(space, space + 16, engine);
-		// for (int pos : space) {
-		// 	if (after(pos) != 0) continue;
-		// 	std::uniform_real_distribution<> popup(0, 1);
-		// 	int tile = (popup(engine) > 0.25) ? 1 : 3;
-		// 	return action::place(tile, pos);
-		// }
 		if(best_pos != -1){
 			std::uniform_real_distribution<> popup(0, 1);
 			int tile = (popup(engine) > 0.25) ? 1 : 3;
@@ -309,9 +286,6 @@ public:
 	}
 
 	virtual action take_action(const board& before) {
-		// std::cout << "player take_action" << std::endl;
-		// std::cout << before;
-		
 		// select a proper action
 		int best_op = 0;
 		float best_vs = MIN_FLOAT;

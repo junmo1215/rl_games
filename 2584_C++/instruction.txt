@@ -14,7 +14,7 @@ To load and review the statistic result from a file
 $ ./2584 --load=stat.bin --summary
 
 To enter the interactive mode, create an environment agent
-$ ./2048 --shell --evil="seed=666 load=weight.bin"
+$ ./2584 --shell --evil="seed=666 load=weight.bin"
 
 To enter the interactive mode, create a player agent and an environment agent
-$ ./2048 --shell --play="seed=777 load=weight.bin" --evil="seed=666 load=weight.bin"
+$ ./2584 --shell --play="seed=777 load=weight.bin" --evil="seed=666 load=weight.bin"
