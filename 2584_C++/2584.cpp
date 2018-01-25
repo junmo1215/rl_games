@@ -67,7 +67,7 @@ int shell(int argc, const char* argv[]) {
 	}
 
 	std::regex match_open  ("^match \\S+ open \\S+:\\S+$");
-	std::regex match_take  ("^match \\S+ (play|evil) take turn$");
+	std::regex match_take  ("^match \\S+ (play|evil) take turn(, drop \\S+)?$");
 	std::regex match_move  ("^match \\S+ (play|evil) move \\S+$");
 	std::regex match_close ("^match \\S+ close \\S+$");
 
@@ -75,23 +75,25 @@ int shell(int argc, const char* argv[]) {
 
 	std::cout << "name 0556158" << std::endl;
 	for (std::string command; std::getline(std::cin, command); ) {
-		dout << "<< " << command << std::endl;
+		dout << ">> " << command << std::endl;
 		try {
 			if (std::regex_match(command, match_take)) {
-				std::string id, role, buf;
-				std::stringstream(command) >> buf >> id >> role;
+				std::string id, role, buf, tile;
+				std::stringstream iss(command);
+				iss >> buf >> id >> role >> buf >> buf;
 
 				if (arena.find(id) == arena.end()) continue;
 				match& m = *arena.at(id);
 				agent& who = *(role == "play" ? m.play : m.evil);
 				if (who.role() == "dummy") continue;
+				if (iss >> buf >> tile) who.notify("tile=" + tile);
 				action a = who.take_action(m.b);
 
 				std::stringstream oss;
 				oss << "match " << id << " " << role << " move " << std::hex << int(a);
 				std::string out = oss.str();
 				std::cout << out << std::endl;
-				dout << ">> " << out << std::endl;
+				dout << "<< " << out << std::endl;
 
 			} else if (std::regex_match(command, match_move)) {
 				std::string id, role, buf; int code;
@@ -133,10 +135,10 @@ int shell(int argc, const char* argv[]) {
 					who->open_episode(role == "play" ? "~:" + m.evil->name() : m.play->name() + ":~");
 
 					std::stringstream oss;
-					oss << "match " << id << " " << role << " ready" << std::endl;
+					oss << "match " << id << " " << role << " ready";
 					std::string out = oss.str();
 					std::cout << out << std::endl;
-					dout << ">> " << out << std::endl;
+					dout << "<< " << out << std::endl;
 					return who;
 				};
 

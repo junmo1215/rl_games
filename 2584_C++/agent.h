@@ -161,6 +161,10 @@ protected:
 	}
 
 	virtual void load_weights(const std::string& path) {
+		std::cout << "load_weights" << std::endl;
+		std::cout << weights.size() << '\t' << (weights.size() > 0) << std::endl;
+		if(weights.size() > 0)
+			return;
 		std::cout << "loading weights... " << std::endl;
 		std::ifstream in;
 		in.open(path.c_str(), std::ios::in | std::ios::binary);
@@ -182,6 +186,10 @@ protected:
 public:
 
 	virtual void init_network(){
+		std::cout << "init_network" << std::endl;
+		std::cout << weights.size() << '\t' << (weights.size() > 0) << std::endl;
+		if(weights.size() > 0)
+			return;
 		// initialize the n-tuple network
 		std::cout << "initialize the n-tuple network" << std::endl;
 		const long feature_num = MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX * MAX_INDEX;
@@ -201,15 +209,15 @@ public:
  */
 class rndenv : public agent {
 public:
-	rndenv(const std::string& args = "") : agent("name=rndenv  role=environment " + args) {
+	rndenv(const std::string& args = "") : agent("name=junmo_evil  role=evil " + args) {
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
-		// if (property.find("load") != property.end()){
-		// 	load_weights(property["load"]);
-		// }
-		// else{
-		// 	init_network();
-		// }
+		if (property.find("load") != property.end()){
+			load_weights(property["load"]);
+		}
+		else{
+			init_network();
+		}
 	}
 
 	virtual action take_action(const board& after) {
@@ -229,7 +237,13 @@ public:
 
 		if(best_pos != -1){
 			std::uniform_real_distribution<> popup(0, 1);
-			int tile = (popup(engine) > 0.25) ? 1 : 3;
+			int tile;
+			try{
+				tile = int(property.at("title"));
+			}
+			catch(std::out_of_range&){
+				tile = (popup(engine) > 0.25) ? 1 : 3;
+			}
 			return action::place(tile, best_pos);
 		}
 
@@ -246,7 +260,7 @@ private:
  */
 class player : public agent {
 public:
-	player(const std::string& args = "") : agent("name=player role=player " + args),  alpha(0.0025f) {
+	player(const std::string& args = "") : agent("name=junmo_player role=play " + args),  alpha(0.0025f) {
 		episode.reserve(32768);
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
