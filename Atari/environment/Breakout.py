@@ -28,12 +28,12 @@ class Breakout:
         return next_observation, reward, done, info
 
     def __parse_observation(self, observation):
-        
-        global i
-        if (i > 0) and (i % 10 == 0):
-            observation = cv2.cvtColor(observation, cv2.COLOR_BGR2GRAY)
-            cv2.imwrite(os.path.join("temp", "test_{}.png".format(i)), observation)
-        i += 1
-        if i > 900:
-            raise
-        return subimage_in_box(observation, Breakout.MAIN_CONTENT_BOX)
+        pass
+        # global i
+        # if (i > 0) and (i % 10 == 0):
+        #     observation = cv2.cvtColor(observation, cv2.COLOR_BGR2GRAY)
+        #     cv2.imwrite(os.path.join("temp", "test_{}.png".format(i)), observation)
+        # i += 1
+        # if i > 900:
+        #     raise
+        # return subimage_in_box(observation, Breakout.MAIN_CONTENT_BOX)
