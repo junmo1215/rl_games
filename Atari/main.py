@@ -1,8 +1,8 @@
-# coding:UTF8
+# coding=UTF8
 
 from __future__ import print_function
 import sys
-import gym
+from environment.Breakout import Breakout
 from rl_brain import DeepQNetwork
 import cv2
 import numpy as np
@@ -24,8 +24,8 @@ def preprocess(observation):
 def main():
     begin_time = datetime.datetime.now()
 
-    env = gym.make("Breakout-v0")
-    env = env.unwrapped
+    env = Breakout()
+    # env = env.unwrapped
     brain = DeepQNetwork(
         n_actions=N_ACTIONS,
         memory_size=MEMORY_SIZE,

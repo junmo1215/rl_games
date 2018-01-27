@@ -1,4 +1,4 @@
-# coding:UTF-8
+# coding=UTF8
 
 """
 网络架构
@@ -9,6 +9,8 @@ import random
 import numpy as np
 import tensorflow as tf
 
+tf.set_random_seed(1024)
+random.seed(1024)
 
 class DeepQNetwork:
     def __init__(
