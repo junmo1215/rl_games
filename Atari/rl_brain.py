@@ -12,6 +12,12 @@ import tensorflow as tf
 tf.set_random_seed(1024)
 random.seed(1024)
 
+import cv2
+def show(image):
+    cv2.imshow('img', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 class DeepQNetwork:
     def __init__(
             self,
@@ -44,7 +50,7 @@ class DeepQNetwork:
         "储存要训练的内容"
         next_observation = np.reshape(next_observation, (84, 84, 1))
         next_state = np.append(next_observation, self.current_state[:, :, :3], axis=2)
-
+        # show(next_observation)
         self.memory_list.append([self.current_state, actions, reward, done, next_state])
         if len(self.memory_list) > self.memory_size:
             del self.memory_list[0]

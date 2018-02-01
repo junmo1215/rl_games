@@ -38,12 +38,18 @@ def main():
     for episode in range(MAX_EPISODE):
         # do nothing
         observation = env.reset()
+        # observation, _, _, _ = env.step(1)
         observation = preprocess(observation)
         brain.reset(observation)
+        total_reward = 0
         while True:
             env.render()
             action = brain.choose_action()
+            # print(action, type(action))
             next_observation, reward, done, _ = env.step(action)
+            if reward != 0:
+                total_reward += reward
+                # print("reward: {} action: {}".format(reward, action))
             # print("reward:", reward)
             next_observation = preprocess(next_observation)
             brain.store_transition(observation, action, reward, done, next_observation)
@@ -58,7 +64,7 @@ def main():
             step += 1
 
         end_time = datetime.datetime.now()
-        print("episode {} over. exec time:{} step:{}".format(episode, end_time - begin_time, step))
+        print("episode {} over. exec time:{} step:{} total_reward:{}".format(episode, end_time - begin_time, step, total_reward))
 
     env.exit("game over")
 
