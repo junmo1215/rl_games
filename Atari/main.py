@@ -43,7 +43,7 @@ def main():
         brain.reset(observation)
         total_reward = 0
         while True:
-            env.render()
+            # env.render()
             action = brain.choose_action()
             # print(action, type(action))
             next_observation, reward, done, _ = env.step(action)
