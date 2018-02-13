@@ -8,16 +8,12 @@ import cv2
 import numpy as np
 import datetime
 
-# import time
-
 MAX_EPISODE = 100000
 N_ACTIONS = 4
 MEMORY_SIZE = 50000
 MINIBATCH_SIZE = 32
 GAMMA = 0.99
-INITIAL_EXPLORATION = 1
-FINAL_EXPLORATION = 0.1
-FINAL_EXPLORATION_FRAME = 1000000
+INITIAL_EPSILON = 0
 
 def preprocess(observation):
     "将游戏画面转换成黑白并且调整图片大小"
@@ -35,9 +31,7 @@ def main():
         memory_size=MEMORY_SIZE,
         minibatch_size=MINIBATCH_SIZE,
         gamma=GAMMA,
-        init_exploration=INITIAL_EXPLORATION,
-        final_exploration=FINAL_EXPLORATION,
-        final_exploration_frame=FINAL_EXPLORATION_FRAME
+        epsilon=INITIAL_EPSILON
     )
 
     step = 0
@@ -53,7 +47,6 @@ def main():
             action = brain.choose_action()
             # print(action, type(action))
             next_observation, reward, done, _ = env.step(action)
-            # time.sleep(2)
             if reward != 0:
                 total_reward += reward
                 # print("reward: {} action: {}".format(reward, action))
@@ -77,6 +70,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) == 2 and sys.argv[1] == 'train':
-    #     INITIAL_EPSILON = 0.1
+    if len(sys.argv) == 2 and sys.argv[1] == 'train':
+        INITIAL_EPSILON = 0.1
     main()

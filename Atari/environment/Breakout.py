@@ -79,3 +79,6 @@ class Breakout:
         # if i > 900:
         #     raise
         return subimage_in_box(observation, Breakout.MAIN_CONTENT_BOX), reward, done
+
+    def exit(self, meg):
+        return self.env.exit(msg)

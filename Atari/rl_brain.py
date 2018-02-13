@@ -25,7 +25,11 @@ class DeepQNetwork:
             memory_size,
             minibatch_size,
             gamma,
-            epsilon
+            init_exploration,
+            final_exploration,
+            final_exploration_frame,
+            model_path = None,
+            is_training = True
     ):
         self.n_actions = n_actions
         self.memory_size = memory_size
@@ -33,7 +37,21 @@ class DeepQNetwork:
         self.minibatch_size = minibatch_size
         self.time_step = 0
         self.gamma = gamma
-        self.epsilon = epsilon
+        self.epsilon = init_exploration
+        self.init_exploration = init_exploration
+        self.final_exploration = final_exploration
+        self.final_exploration_frame = final_exploration_frame
+
+        # if model_path is None:
+        #     self.is_test = False
+        #     self.model_path = None
+        # else:
+        #     self.is_test = True
+        #     self.model_path = model_path
+        #     self.epsilon = 0
+        self.model_path = model_path
+        self.is_training = is_training
+        self.is_testing = not is_training
 
         self.current_state = None
 
@@ -72,9 +90,8 @@ class DeepQNetwork:
             # action[action_index] = 1
 
         # 减去一个很小的数，让训练快结束的时候随机的次数越来越少
-        # 这里写了两个奇怪的数字，要考虑能不能写成time_step的函数
-        if self.epsilon > 0.0001:
-            self.epsilon -= 3.33e-8
+        if self.epsilon > self.final_exploration:
+            self.epsilon -= (self.init_exploration - self.final_exploration) / self.final_exploration_frame
 
         return action_index
 
@@ -114,8 +131,8 @@ class DeepQNetwork:
             })
         self.writer.add_summary(summary, self.time_step)
 
-        # save network every 10000 iteration
-        if self.time_step % 10000 == 0:
+        # save network every 50000 iteration
+        if self.is_training and (self.time_step % 50000 == 0):
             self.saver.save(self.session, 'saved_networks/network-dqn', global_step=self.time_step)
 
     def _create_network(self):
@@ -163,14 +180,18 @@ class DeepQNetwork:
         self.merged = tf.summary.merge_all()
 
         # saving and loading networks
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=300)
         self.session = tf.InteractiveSession()
         self.session.run(tf.global_variables_initializer())
 
         self.writer = tf.summary.FileWriter('./tb_logs',self.session.graph)
 
         checkpoint = tf.train.get_checkpoint_state("saved_networks")
-        if checkpoint and checkpoint.model_checkpoint_path:
+        if self.model_path is not None:
+            self.saver.restore(self.session, self.model_path)
+            self.time_step = self._get_last_time_step(self.model_path)
+            print("Successfully loaded:", self.model_path)
+        elif checkpoint and checkpoint.model_checkpoint_path:
             self.saver.restore(self.session, checkpoint.model_checkpoint_path)
             self.time_step = self._get_last_time_step(checkpoint.model_checkpoint_path)
             print("Successfully loaded:", checkpoint.model_checkpoint_path)
