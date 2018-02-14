@@ -1,11 +1,13 @@
 # coding=UTF8
 
 """
+evaluate model
+
 usage:
-    python test.py MODEL_PATH
+    python evaluate.py MODEL_PATH
 
 e.g.
-    python test.py saved_networks/network-dqn-350000
+    python evaluate.py saved_networks/network-dqn-350000
 """
 
 from __future__ import print_function
@@ -17,7 +19,7 @@ import numpy as np
 import datetime
 import argparse
 
-MAX_EPISODE = 100
+MAX_EPISODE = 10
 N_ACTIONS = 4
 INITIAL_EPSILON = 0
 
@@ -27,7 +29,7 @@ def preprocess(observation):
     ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
     return observation
 
-def main(model_path, show=False):
+def main(model_path, show=False, save=False):
     begin_time = datetime.datetime.now()
 
     env = Breakout()
@@ -81,8 +83,20 @@ def main(model_path, show=False):
         print("episode {} over. score:{}".format(episode, score))
 
     end_time = datetime.datetime.now()
-    print("model path: {}. exec time:{}. \nscore range: {} ~ {}. avg: {}".format(model_path, end_time - begin_time, min_score, max_score, total_score / MAX_EPISODE))
-    print("Average Q: {}".format(total_q / step))
+    avg_score = total_score / MAX_EPISODE
+    avg_q = total_q / step
+    print("model path: {}. exec time:{}. \nscore range: {} ~ {}. avg: {}".format(model_path, end_time - begin_time, min_score, max_score, avg_score))
+    print("Average Q: {}".format(avg_q))
+    if save:
+        num = model_path[model_path.rfind("-") + 1:]
+        num = int(num)
+        dictionary = {
+            "min_score": min_score,
+            "max_score": max_score,
+            "avg_score": avg_score,
+            "avg_q": avg_q
+        }
+        np.save('evaluate_result/{}.npy'.format(num), dictionary)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='evaluate model for Atari')
@@ -92,9 +106,18 @@ if __name__ == "__main__":
     parser.add_argument(
         '--show', action='store_true',
         default=False, help="Whether show environment video rendering")
+    parser.add_argument(
+        '--save', action='store_true',
+        default=False, help="Whether save evaluate result")
     args = parser.parse_args()
     # model_path = "saved_networks/network-dqn-1650000"
     model_path = args.model_path
     # print(args.show, type(args.show))
     # raise
-    main(model_path, show=args.show)
+    params = {
+        "model_path": model_path,
+        "show": args.show,
+        "save": args.save
+    }
+    main(**params)
+    # main(model_path, show=args.show)

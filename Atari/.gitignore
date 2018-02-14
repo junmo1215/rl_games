@@ -1,3 +1,4 @@
 tb_logs/*
 temp/*
-saved_networks_backup/
+saved_networks_backup/*
+evaluate_results/*
