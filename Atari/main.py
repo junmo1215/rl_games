@@ -73,7 +73,6 @@ def main():
         end_time = datetime.datetime.now()
         print("episode {} over. exec time:{} step:{} total_reward:{}".format(episode, end_time - begin_time, step, total_reward))
 
-    env.exit("game over")
 
 
 if __name__ == "__main__":

@@ -22,12 +22,12 @@ class DeepQNetwork:
     def __init__(
             self,
             n_actions,
-            memory_size,
-            minibatch_size,
-            gamma,
-            init_exploration,
-            final_exploration,
-            final_exploration_frame,
+            memory_size = 50000,
+            minibatch_size = 32,
+            gamma = 0.99,
+            init_exploration = 1,
+            final_exploration = 0.1,
+            final_exploration_frame = 1000000,
             model_path = None,
             is_training = True
     ):
