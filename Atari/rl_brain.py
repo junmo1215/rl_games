@@ -78,6 +78,7 @@ class DeepQNetwork:
     def choose_action(self):
         "根据当前状态选择要执行的动作"
         n_actions = self.n_actions
+        max_q_value = 0
 
         # action = np.zeros(n_actions)
         if random.random() <= self.epsilon:
@@ -87,13 +88,14 @@ class DeepQNetwork:
             # 只输入了一个状态
             q_values = self.q_values.eval(feed_dict={self.state_input: [self.current_state]})[0]
             action_index = np.argmax(q_values)
+            max_q_value = np.max(q_values)
             # action[action_index] = 1
 
         # 减去一个很小的数，让训练快结束的时候随机的次数越来越少
         if self.epsilon > self.final_exploration:
             self.epsilon -= (self.init_exploration - self.final_exploration) / self.final_exploration_frame
 
-        return action_index
+        return action_index, max_q_value
 
     def learn(self):
         "训练步骤"

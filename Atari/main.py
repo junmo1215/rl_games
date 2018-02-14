@@ -50,7 +50,7 @@ def main():
         total_reward = 0
         while True:
             # env.render()
-            action = brain.choose_action()
+            action, _ = brain.choose_action()
             # print(action, type(action))
             next_observation, reward, done, _ = env.step(action)
             # time.sleep(2)
