@@ -19,7 +19,6 @@ import numpy as np
 import datetime
 import argparse
 
-MAX_EPISODE = 10
 N_ACTIONS = 4
 INITIAL_EPSILON = 0
 
@@ -29,7 +28,7 @@ def preprocess(observation):
     ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
     return observation
 
-def main(model_path, show=False, save=False):
+def main(model_path, max_episode=100, show=False, save=False):
     begin_time = datetime.datetime.now()
 
     env = Breakout()
@@ -47,7 +46,7 @@ def main(model_path, show=False, save=False):
     total_score = 0
     step = 0
     total_q = 0
-    for episode in range(MAX_EPISODE):
+    for episode in range(max_episode):
         # do nothing
         observation = env.reset()
         observation = preprocess(observation)
@@ -83,26 +82,30 @@ def main(model_path, show=False, save=False):
         print("episode {} over. score:{}".format(episode, score))
 
     end_time = datetime.datetime.now()
-    avg_score = total_score / MAX_EPISODE
+    avg_score = total_score / max_episode
     avg_q = total_q / step
     print("model path: {}. exec time:{}. \nscore range: {} ~ {}. avg: {}".format(model_path, end_time - begin_time, min_score, max_score, avg_score))
     print("Average Q: {}".format(avg_q))
     if save:
         num = model_path[model_path.rfind("-") + 1:]
-        num = int(num)
+        # num = int(num)
         dictionary = {
             "min_score": min_score,
             "max_score": max_score,
             "avg_score": avg_score,
             "avg_q": avg_q
         }
-        np.save('evaluate_result/{}.npy'.format(num), dictionary)
+        np.save('evaluate_results/{}.npy'.format(num), dictionary)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='evaluate model for Atari')
     parser.add_argument(
         'model_path', metavar='model_path', type=str,
         help='Path of trained model')
+    parser.add_argument(
+        "--max_episode", type=int, default=100,
+        help="Max game episode to evaluate"
+    )
     parser.add_argument(
         '--show', action='store_true',
         default=False, help="Whether show environment video rendering")
@@ -117,7 +120,8 @@ if __name__ == "__main__":
     params = {
         "model_path": model_path,
         "show": args.show,
-        "save": args.save
+        "save": args.save,
+        "max_episode": args.max_episode
     }
     main(**params)
     # main(model_path, show=args.show)
