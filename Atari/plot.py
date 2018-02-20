@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 BEGIN_PATH = 0
-ENG_PATH = 2800000
+ENG_PATH = 12950000
 
 def draw_score():
     xs = []
@@ -18,6 +18,7 @@ def draw_score():
         xs.append(x)
         min_scores.append(data["min_score"])
         max_scores.append(data["max_score"])
+        # max_scores.append(0)
         avg_scores.append(data["avg_score"])
     lines = plt.plot(
         xs, min_scores,

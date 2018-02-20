@@ -2,8 +2,8 @@
 
 # time ./evaluate.sh
 
-begin_path=2000000
-end_path=4950000
+begin_path=10000000
+end_path=12950000
 max_episode=100
 
 for i in $(seq $begin_path 50000 $end_path)
