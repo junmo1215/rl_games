@@ -3,7 +3,7 @@
 from __future__ import print_function
 import sys
 import game.wrapped_flappy_bird as game
-from rl_brain import DeepQNetwork
+from rl_brain_v2 import DeepQNetwork
 import cv2
 import numpy as np
 import datetime
